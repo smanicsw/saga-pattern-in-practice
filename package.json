@@ -1,0 +1,19 @@
+{
+  "name": "saga-pattern-in-practice",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.12.4",
+  "scripts": {
+    "dev": "corepack pnpm --filter @saga/order-service dev",
+    "dev:order": "corepack pnpm --filter @saga/order-service dev",
+    "dev:payments": "corepack pnpm --filter @saga/payments-service dev",
+    "dev:inventory": "corepack pnpm --filter @saga/inventory-service dev",
+    "build": "corepack pnpm -r build",
+    "typecheck": "corepack pnpm -r typecheck",
+    "lint": "corepack pnpm -r lint"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "typescript": "^5.8.3"
+  }
+}
