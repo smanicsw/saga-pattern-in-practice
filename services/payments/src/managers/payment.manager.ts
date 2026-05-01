@@ -11,7 +11,11 @@ export interface PaymentManager {
 }
 
 export function createPaymentManager(
-  paymentRepository: PaymentRepository = createPaymentRepository()
+  {
+    paymentRepository = createPaymentRepository()
+  }: {
+    paymentRepository?: PaymentRepository;
+  } = {}
 ): PaymentManager {
   return {
     async getOverview() {

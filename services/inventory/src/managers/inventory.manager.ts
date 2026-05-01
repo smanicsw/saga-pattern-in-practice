@@ -11,7 +11,11 @@ export interface InventoryManager {
 }
 
 export function createInventoryManager(
-  inventoryRepository: InventoryRepository = createInventoryRepository()
+  {
+    inventoryRepository = createInventoryRepository()
+  }: {
+    inventoryRepository?: InventoryRepository;
+  } = {}
 ): InventoryManager {
   return {
     async getOverview() {

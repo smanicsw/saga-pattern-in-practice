@@ -11,7 +11,7 @@ const server = app.listen(config.ORDER_SERVICE_PORT, () => {
   logger.info({ port: config.ORDER_SERVICE_PORT }, "order service listening");
 });
 
-async function shutdown(signal: NodeJS.Signals) {
+async function shutdown({ signal }: { signal: NodeJS.Signals }) {
   logger.info({ signal }, "shutting down order service");
 
   server.close(async () => {
@@ -20,10 +20,14 @@ async function shutdown(signal: NodeJS.Signals) {
   });
 }
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+process.on("SIGINT", (signal) => {
+  void shutdown({ signal });
+});
+process.on("SIGTERM", (signal) => {
+  void shutdown({ signal });
+});
 
 process.on("unhandledRejection", (reason) => {
   logger.error({ reason }, "unhandled promise rejection");
-  void shutdown("SIGTERM");
+  void shutdown({ signal: "SIGTERM" });
 });

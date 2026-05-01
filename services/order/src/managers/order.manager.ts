@@ -11,7 +11,11 @@ export interface OrderManager {
 }
 
 export function createOrderManager(
-  orderRepository: OrderRepository = createOrderRepository()
+  {
+    orderRepository = createOrderRepository()
+  }: {
+    orderRepository?: OrderRepository;
+  } = {}
 ): OrderManager {
   return {
     async getOverview() {

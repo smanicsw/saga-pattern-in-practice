@@ -5,5 +5,5 @@ import { registerInventoryRoute } from "./inventory/index.js";
 
 export const apiRoutes = Router();
 
-registerHealthRoute(apiRoutes);
-registerInventoryRoute(apiRoutes);
+registerHealthRoute({ router: apiRoutes });
+registerInventoryRoute({ router: apiRoutes });

@@ -5,8 +5,13 @@ import { createOrderManager, type OrderManager } from "../../../managers/index.j
 import { orderOverviewResponseSchema } from "../../schemas/index.js";
 
 export function registerOrderRoute(
-  router: Router,
-  orderManager: OrderManager = createOrderManager()
+  {
+    router,
+    orderManager = createOrderManager({})
+  }: {
+    router: Router;
+    orderManager?: OrderManager;
+  }
 ) {
   router.get("/", async (_req, res) => {
     const overview = await orderManager.getOverview();
