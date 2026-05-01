@@ -5,8 +5,13 @@ import { createInventoryManager, type InventoryManager } from "../../../managers
 import { inventoryOverviewResponseSchema } from "../../schemas/index.js";
 
 export function registerInventoryRoute(
-  router: Router,
-  inventoryManager: InventoryManager = createInventoryManager()
+  {
+    router,
+    inventoryManager = createInventoryManager({})
+  }: {
+    router: Router;
+    inventoryManager?: InventoryManager;
+  }
 ) {
   router.get("/", async (_req, res) => {
     const overview = await inventoryManager.getOverview();

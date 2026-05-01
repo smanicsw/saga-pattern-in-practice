@@ -5,5 +5,5 @@ import { registerOrderRoute } from "./order/index.js";
 
 export const apiRoutes = Router();
 
-registerHealthRoute(apiRoutes);
-registerOrderRoute(apiRoutes);
+registerHealthRoute({ router: apiRoutes });
+registerOrderRoute({ router: apiRoutes });

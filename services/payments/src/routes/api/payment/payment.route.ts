@@ -5,8 +5,13 @@ import { createPaymentManager, type PaymentManager } from "../../../managers/ind
 import { paymentOverviewResponseSchema } from "../../schemas/index.js";
 
 export function registerPaymentRoute(
-  router: Router,
-  paymentManager: PaymentManager = createPaymentManager()
+  {
+    router,
+    paymentManager = createPaymentManager({})
+  }: {
+    router: Router;
+    paymentManager?: PaymentManager;
+  }
 ) {
   router.get("/", async (_req, res) => {
     const overview = await paymentManager.getOverview();
