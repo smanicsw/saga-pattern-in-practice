@@ -1,0 +1,33 @@
+services:
+  order:
+    build:
+      context: .
+      args:
+        SERVICE: order
+    environment:
+      NODE_ENV: production
+      ORDER_SERVICE_PORT: 3001
+    ports:
+      - "3001:3001"
+
+  payments:
+    build:
+      context: .
+      args:
+        SERVICE: payments
+    environment:
+      NODE_ENV: production
+      PAYMENT_SERVICE_PORT: 3002
+    ports:
+      - "3002:3002"
+
+  inventory:
+    build:
+      context: .
+      args:
+        SERVICE: inventory
+    environment:
+      NODE_ENV: production
+      INVENTORY_SERVICE_PORT: 3003
+    ports:
+      - "3003:3003"
