@@ -3,9 +3,9 @@ import { Type, type Static } from "@sinclair/typebox";
 export const healthResponseSchema = Type.Object(
   {
     service: Type.Literal("order"),
-    status: Type.Literal("ok")
+    status: Type.Literal("ok"),
   },
-  { additionalProperties: false }
+  { additionalProperties: false },
 );
 
 export type HealthResponse = Static<typeof healthResponseSchema>;

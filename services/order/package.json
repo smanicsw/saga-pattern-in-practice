@@ -9,13 +9,17 @@
     "start": "node dist/index.js",
     "test": "jest --config jest.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "db:migrate:latest": "knex migrate:latest --knexfile knexfile.cjs",
+    "db:migrate:make": "knex migrate:make --knexfile knexfile.cjs"
   },
   "dependencies": {
     "@sinclair/typebox": "^0.34.49",
     "express": "^5.1.0",
     "pino": "^9.7.0",
-    "pino-http": "^10.5.0"
+    "pino-http": "^10.5.0",
+    "knex": "^3.1.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",

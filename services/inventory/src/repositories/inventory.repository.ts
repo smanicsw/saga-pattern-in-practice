@@ -10,6 +10,6 @@ export function createInventoryRepository(): InventoryRepository {
   return {
     async findAll() {
       return inventoryItems;
-    }
+    },
   };
 }

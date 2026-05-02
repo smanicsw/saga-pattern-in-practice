@@ -5,10 +5,13 @@ services:
       args:
         SERVICE: order
     environment:
-      NODE_ENV: production
-      ORDER_SERVICE_PORT: 3001
+      NODE_ENV: ${NODE_ENV}
+      ORDER_SERVICE_PORT: ${ORDER_SERVICE_PORT}
+      DATABASE_URL: ${ORDER_DATABASE_URL}
     ports:
-      - "3001:3001"
+      - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
+    depends_on:
+      - order-db
 
   payments:
     build:
@@ -16,10 +19,13 @@ services:
       args:
         SERVICE: payments
     environment:
-      NODE_ENV: production
-      PAYMENT_SERVICE_PORT: 3002
+      NODE_ENV: ${NODE_ENV}
+      PAYMENT_SERVICE_PORT: ${PAYMENT_SERVICE_PORT}
+      DATABASE_URL: ${PAYMENT_DATABASE_URL}
     ports:
-      - "3002:3002"
+      - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
+    depends_on:
+      - payments-db
 
   inventory:
     build:
@@ -27,7 +33,48 @@ services:
       args:
         SERVICE: inventory
     environment:
-      NODE_ENV: production
-      INVENTORY_SERVICE_PORT: 3003
+      NODE_ENV: ${NODE_ENV}
+      INVENTORY_SERVICE_PORT: ${INVENTORY_SERVICE_PORT}
+      DATABASE_URL: ${INVENTORY_DATABASE_URL}
     ports:
-      - "3003:3003"
+      - "${INVENTORY_SERVICE_PORT}:${INVENTORY_SERVICE_PORT}"
+    depends_on:
+      - inventory-db
+
+  order-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${ORDER_DB_USER}
+      POSTGRES_PASSWORD: ${ORDER_DB_PASSWORD}
+      POSTGRES_DB: ${ORDER_DB_NAME}
+    ports:
+      - "${ORDER_DB_HOST_PORT}:5432"
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+
+  payments-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${PAYMENTS_DB_USER}
+      POSTGRES_PASSWORD: ${PAYMENTS_DB_PASSWORD}
+      POSTGRES_DB: ${PAYMENTS_DB_NAME}
+    ports:
+      - "${PAYMENTS_DB_HOST_PORT}:5432"
+    volumes:
+      - payments-db-data:/var/lib/postgresql/data
+
+  inventory-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${INVENTORY_DB_USER}
+      POSTGRES_PASSWORD: ${INVENTORY_DB_PASSWORD}
+      POSTGRES_DB: ${INVENTORY_DB_NAME}
+    ports:
+      - "${INVENTORY_DB_HOST_PORT}:5432"
+    volumes:
+      - inventory-db-data:/var/lib/postgresql/data
+
+volumes:
+  order-db-data:
+  payments-db-data:
+  inventory-db-data:

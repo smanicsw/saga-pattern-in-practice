@@ -93,6 +93,19 @@ From repository root:
 corepack pnpm install
 ```
 
+## Environment Variables
+
+This project uses root-level env files for Docker and local setup:
+
+- `.env` (local secrets, ignored by git)
+- `.env.example` (safe template, committed)
+
+First-time setup:
+
+```bash
+cp .env.example .env
+```
+
 ## Run the App
 
 ### Option 1: Local development (one terminal per service)
@@ -219,4 +232,3 @@ Current implementation is intentionally minimal and designed as a foundation for
 - transactional outbox implementation
 - service-to-service communication
 - richer API contracts and persistence
-

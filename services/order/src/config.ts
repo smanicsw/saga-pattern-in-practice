@@ -7,13 +7,14 @@ const envSchema = Type.Object(
       [
         Type.Literal("development"),
         Type.Literal("test"),
-        Type.Literal("production")
+        Type.Literal("production"),
       ],
-      { default: "development" }
+      { default: "development" },
     ),
-    ORDER_SERVICE_PORT: Type.Integer({ minimum: 1, default: 3001 })
+    ORDER_SERVICE_PORT: Type.Integer({ minimum: 1, default: 3001 }),
+    DATABASE_URL: Type.String({ minLength: 1 }),
   },
-  { additionalProperties: false }
+  { additionalProperties: false },
 );
 
 export type Config = Static<typeof envSchema>;

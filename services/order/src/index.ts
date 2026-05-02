@@ -1,6 +1,9 @@
 import { createApp } from "./app.js";
 import { config } from "./config.js";
-import { connectDatabase, disconnectDatabase } from "./infrastructure/adapters/database/index.js";
+import {
+  connectDatabase,
+  disconnectDatabase,
+} from "./infrastructure/adapters/database/index.js";
 import { logger } from "./infrastructure/adapters/logger/index.js";
 
 await connectDatabase();

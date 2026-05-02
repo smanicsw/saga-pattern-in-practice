@@ -1,4 +1,7 @@
-import { createInventoryRepository, type InventoryRepository } from "../repositories/index.js";
+import {
+  createInventoryRepository,
+  type InventoryRepository,
+} from "../repositories/index.js";
 
 export interface InventoryOverview {
   message: string;
@@ -10,13 +13,11 @@ export interface InventoryManager {
   getOverview(): Promise<InventoryOverview>;
 }
 
-export function createInventoryManager(
-  {
-    inventoryRepository = createInventoryRepository()
-  }: {
-    inventoryRepository?: InventoryRepository;
-  } = {}
-): InventoryManager {
+export function createInventoryManager({
+  inventoryRepository = createInventoryRepository(),
+}: {
+  inventoryRepository?: InventoryRepository;
+} = {}): InventoryManager {
   return {
     async getOverview() {
       const inventoryItems = await inventoryRepository.findAll();
@@ -24,8 +25,8 @@ export function createInventoryManager(
       return {
         message: "Inventory service is running",
         next: "Reserve and release stock as part of the order saga.",
-        totalItems: inventoryItems.length
+        totalItems: inventoryItems.length,
       };
-    }
+    },
   };
 }
