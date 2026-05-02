@@ -1,0 +1,7 @@
+node_modules
+services/*/node_modules
+services/*/dist
+.git
+.gitignore
+.codex
+*.log
