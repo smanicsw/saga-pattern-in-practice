@@ -1,4 +1,7 @@
-import { createPaymentRepository, type PaymentRepository } from "../repositories/index.js";
+import {
+  createPaymentRepository,
+  type PaymentRepository,
+} from "../repositories/index.js";
 
 export interface PaymentOverview {
   message: string;
@@ -10,13 +13,11 @@ export interface PaymentManager {
   getOverview(): Promise<PaymentOverview>;
 }
 
-export function createPaymentManager(
-  {
-    paymentRepository = createPaymentRepository()
-  }: {
-    paymentRepository?: PaymentRepository;
-  } = {}
-): PaymentManager {
+export function createPaymentManager({
+  paymentRepository = createPaymentRepository(),
+}: {
+  paymentRepository?: PaymentRepository;
+} = {}): PaymentManager {
   return {
     async getOverview() {
       const payments = await paymentRepository.findAll();
@@ -24,8 +25,8 @@ export function createPaymentManager(
       return {
         message: "Payments service is running",
         next: "Authorize and capture payments as part of the order saga.",
-        totalPayments: payments.length
+        totalPayments: payments.length,
       };
-    }
+    },
   };
 }

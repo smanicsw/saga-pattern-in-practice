@@ -1,6 +1,9 @@
 import { createApp } from "./app.js";
 import { config } from "./config.js";
-import { connectDatabase, disconnectDatabase } from "./infrastructure/adapters/database/index.js";
+import {
+  connectDatabase,
+  disconnectDatabase,
+} from "./infrastructure/adapters/database/index.js";
 import { logger } from "./infrastructure/adapters/logger/index.js";
 
 await connectDatabase();
@@ -10,7 +13,7 @@ const app = createApp();
 const server = app.listen(config.INVENTORY_SERVICE_PORT, () => {
   logger.info(
     { port: config.INVENTORY_SERVICE_PORT },
-    "inventory service listening"
+    "inventory service listening",
   );
 });
 

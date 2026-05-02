@@ -1,6 +1,9 @@
 import { createApp } from "./app.js";
 import { config } from "./config.js";
-import { connectDatabase, disconnectDatabase } from "./infrastructure/adapters/database/index.js";
+import {
+  connectDatabase,
+  disconnectDatabase,
+} from "./infrastructure/adapters/database/index.js";
 import { logger } from "./infrastructure/adapters/logger/index.js";
 
 await connectDatabase();
@@ -8,7 +11,10 @@ await connectDatabase();
 const app = createApp();
 
 const server = app.listen(config.PAYMENT_SERVICE_PORT, () => {
-  logger.info({ port: config.PAYMENT_SERVICE_PORT }, "payments service listening");
+  logger.info(
+    { port: config.PAYMENT_SERVICE_PORT },
+    "payments service listening",
+  );
 });
 
 async function shutdown({ signal }: { signal: NodeJS.Signals }) {

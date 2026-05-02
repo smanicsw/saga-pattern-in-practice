@@ -4,9 +4,9 @@ export const inventoryOverviewResponseSchema = Type.Object(
   {
     message: Type.String(),
     next: Type.String(),
-    totalItems: Type.Integer({ minimum: 0 })
+    totalItems: Type.Integer({ minimum: 0 }),
   },
-  { additionalProperties: false }
+  { additionalProperties: false },
 );
 
 export type InventoryOverviewResponse = Static<

@@ -10,6 +10,6 @@ export function createPaymentRepository(): PaymentRepository {
   return {
     async findAll() {
       return payments;
-    }
+    },
   };
 }

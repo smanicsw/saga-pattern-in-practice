@@ -4,9 +4,9 @@ export const paymentOverviewResponseSchema = Type.Object(
   {
     message: Type.String(),
     next: Type.String(),
-    totalPayments: Type.Integer({ minimum: 0 })
+    totalPayments: Type.Integer({ minimum: 0 }),
   },
-  { additionalProperties: false }
+  { additionalProperties: false },
 );
 
 export type PaymentOverviewResponse = Static<

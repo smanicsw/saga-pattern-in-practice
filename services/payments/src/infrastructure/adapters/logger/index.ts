@@ -10,8 +10,8 @@ export const logger = pino({
           target: "pino-pretty",
           options: {
             colorize: true,
-            translateTime: "HH:MM:ss"
-          }
+            translateTime: "HH:MM:ss",
+          },
         }
-      : undefined
+      : undefined,
 });

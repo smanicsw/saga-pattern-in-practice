@@ -1,4 +1,7 @@
-import { createOrderRepository, type OrderRepository } from "../repositories/index.js";
+import {
+  createOrderRepository,
+  type OrderRepository,
+} from "../repositories/index.js";
 
 export interface OrderOverview {
   message: string;
@@ -10,13 +13,11 @@ export interface OrderManager {
   getOverview(): Promise<OrderOverview>;
 }
 
-export function createOrderManager(
-  {
-    orderRepository = createOrderRepository()
-  }: {
-    orderRepository?: OrderRepository;
-  } = {}
-): OrderManager {
+export function createOrderManager({
+  orderRepository = createOrderRepository(),
+}: {
+  orderRepository?: OrderRepository;
+} = {}): OrderManager {
   return {
     async getOverview() {
       const orders = await orderRepository.findAll();
@@ -24,8 +25,8 @@ export function createOrderManager(
       return {
         message: "Order service is running",
         next: "Create an order endpoint, then connect saga orchestration and outbox messaging.",
-        totalOrders: orders.length
+        totalOrders: orders.length,
       };
-    }
+    },
   };
 }

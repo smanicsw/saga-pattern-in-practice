@@ -10,6 +10,6 @@ export function createOrderRepository(): OrderRepository {
   return {
     async findAll() {
       return orders;
-    }
+    },
   };
 }
