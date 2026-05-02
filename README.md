@@ -27,6 +27,8 @@ The codebase is organized so each service can evolve independently while still b
 - **Logging:** pino + pino-http
 - **Monorepo/workspace:** pnpm workspaces
 - **Testing:** Jest + ts-jest (per service)
+- **Database:** PostgreSQL (one database per service)
+- **Query/migrations:** Knex + `pg`
 - **Containerization:** Docker multi-stage build + Docker Compose
 
 ### Service structure
@@ -51,6 +53,16 @@ Every service mounts routes under a service-specific prefix:
 - Inventory: `/api/v1/inventory`
 
 So service route definitions like `router.get("/health", ...)` become `/api/v1/<service>/health` at runtime.
+
+### Database topology
+
+Each service has its own Postgres database:
+
+- Order service -> `order_db` (`order-db` container)
+- Payments service -> `payments_db` (`payments-db` container)
+- Inventory service -> `inventory_db` (`inventory-db` container)
+
+This keeps service data ownership isolated and aligns with microservice boundaries.
 
 ## Services and Endpoints
 
@@ -106,6 +118,18 @@ First-time setup:
 cp .env.example .env
 ```
 
+Important variables:
+
+- service ports: `ORDER_SERVICE_PORT`, `PAYMENT_SERVICE_PORT`, `INVENTORY_SERVICE_PORT`
+- service DB URLs: `ORDER_DATABASE_URL`, `PAYMENT_DATABASE_URL`, `INVENTORY_DATABASE_URL`
+- DB credentials: `*_DB_USER`, `*_DB_PASSWORD`, `*_DB_NAME`
+- exposed DB ports: `ORDER_DB_HOST_PORT`, `PAYMENTS_DB_HOST_PORT`, `INVENTORY_DB_HOST_PORT`
+
+Local vs Docker behavior:
+
+- Docker Compose automatically reads root `.env`.
+- Local `pnpm dev:*` does not automatically load `.env`; export vars in your shell or use an env loader.
+
 ## Run the App
 
 ### Option 1: Local development (one terminal per service)
@@ -133,6 +157,8 @@ View container logs:
 ```bash
 corepack pnpm docker:logs
 ```
+
+Database containers are started in the same compose project, and each service gets its `DATABASE_URL` from `.env`.
 
 ## Verify the App
 
@@ -163,6 +189,30 @@ corepack pnpm lint
 ```
 
 These run recursively across all services.
+
+## Database Migrations (Knex)
+
+Each service has its own `knexfile.cjs` and migration folder:
+
+- `services/order/src/infrastructure/adapters/database/migrations`
+- `services/payments/src/infrastructure/adapters/database/migrations`
+- `services/inventory/src/infrastructure/adapters/database/migrations`
+
+Create a migration:
+
+```bash
+corepack pnpm --filter @saga/order-service db:migrate:make create_orders_table
+corepack pnpm --filter @saga/payments-service db:migrate:make create_payments_table
+corepack pnpm --filter @saga/inventory-service db:migrate:make create_inventory_items_table
+```
+
+Apply migrations:
+
+```bash
+corepack pnpm --filter @saga/order-service db:migrate:latest
+corepack pnpm --filter @saga/payments-service db:migrate:latest
+corepack pnpm --filter @saga/inventory-service db:migrate:latest
+```
 
 ## Testing
 
@@ -195,6 +245,9 @@ corepack pnpm --filter @saga/inventory-service test
   - deps stage installs workspace dependencies
   - build stage compiles selected service and deploys production bundle
   - runtime stage contains only the deployed service output
+- `docker-compose.yml` builds three images with build args:
+- `docker-compose.yml` also starts three dedicated Postgres containers and named volumes.
+- Service containers use env-driven `DATABASE_URL` values from root `.env`.
 - `docker-compose.yml` builds three images with build args:
   - `SERVICE=order`
   - `SERVICE=payments`
