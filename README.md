@@ -42,7 +42,7 @@ Each service follows the same shape:
 - `src/repositories/`: data access abstraction
 - `src/infrastructure/adapters/`: adapters (logger, database)
 - `src/constants/`: service constants (for example `SERVICE_API_PREFIX`)
-- `src/tests/`: test folders (`unit`, `functional`, `apis`, `mocks`, `fixtures`, `utils`)
+- `tests/`: test folders (`unit`, `functional`, `apis`, `mocks`, `fixtures`, `utils`)
 
 ### Route prefixing
 
@@ -132,6 +132,9 @@ Local vs Docker behavior:
 
 ## Run the App
 
+Migration strategy: **Option A (manual)**.
+Run migrations before starting each service. Migrations are not auto-run at app boot.
+
 ### Option 1: Local development (one terminal per service)
 
 ```bash
@@ -214,6 +217,12 @@ corepack pnpm --filter @saga/payments-service db:migrate:latest
 corepack pnpm --filter @saga/inventory-service db:migrate:latest
 ```
 
+Recommended startup order:
+
+1. Start databases (`corepack pnpm docker:up` or your local Postgres instances).
+2. Run `db:migrate:latest` for each service.
+3. Start service processes.
+
 ## Testing
 
 ### Run all tests
@@ -232,12 +241,12 @@ corepack pnpm --filter @saga/inventory-service test
 
 ### Test folder layout per service
 
-- `src/tests/unit`: unit tests
-- `src/tests/functional`: functional tests
-- `src/tests/apis`: endpoint/API tests
-- `src/tests/mocks`: test doubles and mock adapters
-- `src/tests/fixtures`: static test data
-- `src/tests/utils`: test helper functions
+- `tests/unit`: unit tests
+- `tests/functional`: functional tests
+- `tests/apis`: endpoint/API tests
+- `tests/mocks`: test doubles and mock adapters
+- `tests/fixtures`: static test data
+- `tests/utils`: test helper functions
 
 ## Docker Notes
 
@@ -262,6 +271,16 @@ Each service entrypoint handles:
 - `unhandledRejection`
 
 On shutdown, the service logs, stops accepting new connections, disconnects database adapter, and exits cleanly.
+
+## Database Readiness
+
+At startup, each service:
+
+- creates a Knex Postgres client from `DATABASE_URL`
+- runs a connectivity probe (`select 1`)
+- starts listening only after the DB check succeeds
+
+If DB connection fails, startup logs a fatal error and exits with status code `1`.
 
 ## Workspace Commands Reference
 

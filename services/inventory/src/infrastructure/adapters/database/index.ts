@@ -18,14 +18,21 @@ export async function connectDatabase() {
     return;
   }
 
-  db = knex({
+  const candidate = knex({
     client: "pg",
     connection: config.DATABASE_URL,
     pool: { min: 0, max: 10 },
   });
 
-  await db.raw("select 1");
-  logger.info("database adapter connected");
+  try {
+    await candidate.raw("select 1");
+    db = candidate;
+    logger.info("database adapter connected");
+  } catch (error) {
+    await candidate.destroy();
+    logger.error({ error }, "database adapter connection failed");
+    throw error;
+  }
 }
 
 export async function disconnectDatabase() {
