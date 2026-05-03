@@ -30,6 +30,7 @@ async function main() {
   process.on("SIGINT", (signal) => {
     void shutdown({ signal });
   });
+  
   process.on("SIGTERM", (signal) => {
     void shutdown({ signal });
   });
