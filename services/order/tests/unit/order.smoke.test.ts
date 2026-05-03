@@ -1,4 +1,4 @@
-import { createOrderManager } from "../../managers/index.js";
+import { createOrderManager } from "../../src/managers/index.js";
 
 describe("order service test setup", () => {
   it("returns order overview", async () => {

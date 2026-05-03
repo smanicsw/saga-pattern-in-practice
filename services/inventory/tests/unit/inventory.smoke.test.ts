@@ -1,4 +1,4 @@
-import { createInventoryManager } from "../../managers/index.js";
+import { createInventoryManager } from "../../src/managers/index.js";
 
 describe("inventory service test setup", () => {
   it("returns inventory overview", async () => {

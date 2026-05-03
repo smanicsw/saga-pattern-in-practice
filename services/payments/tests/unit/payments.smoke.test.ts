@@ -1,4 +1,4 @@
-import { createPaymentManager } from "../../managers/index.js";
+import { createPaymentManager } from "../../src/managers/index.js";
 
 describe("payments service test setup", () => {
   it("returns payments overview", async () => {
