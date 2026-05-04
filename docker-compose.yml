@@ -11,7 +11,17 @@ services:
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
     depends_on:
-      - order-db
+      order-db:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        until node_modules/.bin/knex migrate:latest --knexfile knexfile.cjs; do
+          echo "Waiting for order-db and retrying migrations..."
+          sleep 2
+        done
+        node dist/index.js
 
   payments:
     build:
@@ -25,7 +35,17 @@ services:
     ports:
       - "${PAYMENT_SERVICE_PORT}:${PAYMENT_SERVICE_PORT}"
     depends_on:
-      - payments-db
+      payments-db:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        until node_modules/.bin/knex migrate:latest --knexfile knexfile.cjs; do
+          echo "Waiting for payments-db and retrying migrations..."
+          sleep 2
+        done
+        node dist/index.js
 
   inventory:
     build:
@@ -39,7 +59,17 @@ services:
     ports:
       - "${INVENTORY_SERVICE_PORT}:${INVENTORY_SERVICE_PORT}"
     depends_on:
-      - inventory-db
+      inventory-db:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        until node_modules/.bin/knex migrate:latest --knexfile knexfile.cjs; do
+          echo "Waiting for inventory-db and retrying migrations..."
+          sleep 2
+        done
+        node dist/index.js
 
   order-db:
     image: postgres:16-alpine
@@ -51,6 +81,11 @@ services:
       - "${ORDER_DB_HOST_PORT}:5432"
     volumes:
       - order-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ORDER_DB_USER} -d ${ORDER_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   payments-db:
     image: postgres:16-alpine
@@ -62,6 +97,11 @@ services:
       - "${PAYMENTS_DB_HOST_PORT}:5432"
     volumes:
       - payments-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PAYMENTS_DB_USER} -d ${PAYMENTS_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   inventory-db:
     image: postgres:16-alpine
@@ -73,6 +113,11 @@ services:
       - "${INVENTORY_DB_HOST_PORT}:5432"
     volumes:
       - inventory-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${INVENTORY_DB_USER} -d ${INVENTORY_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
 volumes:
   order-db-data:

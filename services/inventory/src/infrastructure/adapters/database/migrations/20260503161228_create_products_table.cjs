@@ -6,8 +6,8 @@ exports.up = async function (knex) {
     table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
     table.string("sku", 120).notNullable().unique();
     table.string("name", 255).notNullable();
-    table.decimal("price_amount", 12, 2).notNullable();
-    table.string("price_currency", 3).notNullable().defaultTo("EUR");
+    table.decimal("price", 12, 2).notNullable();
+    table.string("currency", 3).notNullable().defaultTo("EUR");
     table.timestamp("created_at").notNullable().defaultTo(knex.fn.now());
     table.timestamp("updated_at").notNullable().defaultTo(knex.fn.now());
   });

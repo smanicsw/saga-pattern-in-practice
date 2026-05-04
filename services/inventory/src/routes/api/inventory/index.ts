@@ -1,1 +1,1 @@
-export { registerInventoryRoute } from "./inventory.route.js";
+export { registerProductRoutes } from "./products.route.js";
