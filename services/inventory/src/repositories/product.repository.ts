@@ -5,6 +5,7 @@ import {
     ProductRow,
 } from "../entities/product.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
+import { toStringValue } from "../utils/db-value.util.js";
 
 export async function createOne({
   newProduct,
@@ -17,7 +18,15 @@ export async function createOne({
 
   const [createdProductRow] = await db<ProductRow>("products")
     .insert(productRowToCreate)
-    .returning("*");
+    .returning([
+      "id",
+      "sku",
+      "name",
+      "price",
+      "currency",
+      "created_at",
+      "updated_at"
+    ]);
 
   return transformFromRow({productRow: createdProductRow});
 }
@@ -40,7 +49,7 @@ function transformFromRow({productRow}: {productRow: ProductRow}): Product {
     name: productRow.name,
     price: Number(productRow.price),
     currency: productRow.currency,
-    createdAt: productRow.created_at,
-    updatedAt: productRow.updated_at,
+    createdAt: toStringValue(productRow.created_at),
+    updatedAt: toStringValue(productRow.updated_at),
   };
 }
