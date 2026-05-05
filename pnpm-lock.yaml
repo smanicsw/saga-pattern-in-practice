@@ -18,8 +18,24 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  packages/http-kit:
+    dependencies:
+      '@sinclair/typebox':
+        specifier: ^0.34.49
+        version: 0.34.49
+      express:
+        specifier: ^5.1.0
+        version: 5.2.1
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.3
+        version: 5.0.6
+
   services/inventory:
     dependencies:
+      '@saga/http-kit':
+        specifier: workspace:*
+        version: link:../../packages/http-kit
       '@sinclair/typebox':
         specifier: ^0.34.49
         version: 0.34.49
@@ -100,6 +116,9 @@ importers:
 
   services/payments:
     dependencies:
+      '@saga/http-kit':
+        specifier: workspace:*
+        version: link:../../packages/http-kit
       '@sinclair/typebox':
         specifier: ^0.34.49
         version: 0.34.49

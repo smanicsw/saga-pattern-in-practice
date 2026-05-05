@@ -1,5 +1,5 @@
 import type { Router } from "express";
-import { Value } from "@sinclair/typebox/value";
+import { defineRoute } from "@saga/http-kit";
 
 import {
   createPaymentManager,
@@ -14,10 +14,15 @@ export function registerPaymentRoute({
   router: Router;
   paymentManager?: PaymentManager;
 }) {
-  router.get("/", async (_req, res) => {
-    const overview = await paymentManager.getOverview();
-    const response = Value.Parse(paymentOverviewResponseSchema, overview);
-
-    res.status(200).json(response);
-  });
+  router.get(
+    "/",
+    defineRoute({
+      schemas: {
+        response: paymentOverviewResponseSchema,
+      },
+      handler: async function () {
+        return paymentManager.getOverview();
+      },
+    }),
+  );
 }
