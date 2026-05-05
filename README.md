@@ -132,8 +132,10 @@ Local vs Docker behavior:
 
 ## Run the App
 
-Migration strategy: **Option A (manual)**.
-Run migrations before starting each service. Migrations are not auto-run at app boot.
+Migration strategy:
+
+- Docker flow: migrations are auto-run at service startup.
+- Local non-Docker flow: run migrations manually before starting services.
 
 ### Option 1: Local development (one terminal per service)
 
@@ -162,6 +164,27 @@ corepack pnpm docker:logs
 ```
 
 Database containers are started in the same compose project, and each service gets its `DATABASE_URL` from `.env`.
+Each service container runs `knex migrate:latest` before starting the app process.
+
+### Option 3: Run all services with Docker + hot reload (dev mode)
+
+```bash
+corepack pnpm docker:dev
+```
+
+This runs all three services in watch mode (`tsx watch`) with source bind-mounted into containers.
+
+Stop dev stack:
+
+```bash
+corepack pnpm docker:dev:down
+```
+
+View dev logs:
+
+```bash
+corepack pnpm docker:dev:logs
+```
 
 ## Verify the App
 
@@ -219,9 +242,8 @@ corepack pnpm --filter @saga/inventory-service db:migrate:latest
 
 Recommended startup order:
 
-1. Start databases (`corepack pnpm docker:up` or your local Postgres instances).
-2. Run `db:migrate:latest` for each service.
-3. Start service processes.
+1. Docker flow: run `corepack pnpm docker:up` (migrations run automatically).
+2. Local flow: start Postgres, run `db:migrate:latest` per service, then start services.
 
 ## Testing
 
@@ -254,13 +276,13 @@ corepack pnpm --filter @saga/inventory-service test
   - deps stage installs workspace dependencies
   - build stage compiles selected service and deploys production bundle
   - runtime stage contains only the deployed service output
-- `docker-compose.yml` builds three images with build args:
 - `docker-compose.yml` also starts three dedicated Postgres containers and named volumes.
 - Service containers use env-driven `DATABASE_URL` values from root `.env`.
 - `docker-compose.yml` builds three images with build args:
   - `SERVICE=order`
   - `SERVICE=payments`
   - `SERVICE=inventory`
+- `docker-compose.dev.yml` overrides service commands to run migrations + `tsx watch` for hot reload.
 
 ## Graceful Shutdown Behavior
 
@@ -292,6 +314,9 @@ From root `package.json`:
 - `corepack pnpm docker:up`
 - `corepack pnpm docker:down`
 - `corepack pnpm docker:logs`
+- `corepack pnpm docker:dev`
+- `corepack pnpm docker:dev:down`
+- `corepack pnpm docker:dev:logs`
 - `corepack pnpm build`
 - `corepack pnpm typecheck`
 - `corepack pnpm lint`

@@ -6,6 +6,7 @@ WORKDIR /app
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages ./packages
 COPY services ./services
 
 RUN pnpm install --frozen-lockfile
@@ -14,7 +15,7 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS build
 
 ARG SERVICE
-RUN pnpm --filter @saga/${SERVICE}-service build
+RUN pnpm --filter @saga/${SERVICE}-service... build
 RUN pnpm --filter @saga/${SERVICE}-service deploy --legacy --prod /out
 
 # Stage 3: Runtime image containing only the selected service bundle.

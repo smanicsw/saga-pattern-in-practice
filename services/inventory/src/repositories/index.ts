@@ -1,2 +1,1 @@
-export { createInventoryRepository } from "./inventory.repository.js";
-export type { InventoryRepository } from "./inventory.repository.js";
+export { createOne as createOneProduct } from "./product.repository.js";

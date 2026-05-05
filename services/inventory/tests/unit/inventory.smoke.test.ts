@@ -1,12 +1,17 @@
-import { createInventoryManager } from "../../src/managers/index.js";
+import { Value } from "@sinclair/typebox/value";
+
+import { CreateOneProductBody } from "../../src/routes/schemas/products.schema.js";
 
 describe("inventory service test setup", () => {
-  it("returns inventory overview", async () => {
-    const manager = createInventoryManager({});
+  it("parses create product request payload", async () => {
+    const payload = Value.Parse(CreateOneProductBody, {
+      sku: "SKU-123",
+      name: "Keyboard",
+      price: 49.99,
+    });
 
-    const overview = await manager.getOverview();
-
-    expect(overview.message).toBe("Inventory service is running");
-    expect(overview.totalItems).toBe(0);
+    expect(payload.sku).toBe("SKU-123");
+    expect(payload.name).toBe("Keyboard");
+    expect(payload.price).toBe(49.99);
   });
 });
