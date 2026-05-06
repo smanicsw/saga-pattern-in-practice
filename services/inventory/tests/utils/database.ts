@@ -58,7 +58,17 @@ export async function insert(
         continue;
       }
 
-      await trx(tableName).insert(rows);
+      await trx(tableName).insert(rows.map(transformToDatabaseRow));
     }
   });
+}
+
+function transformToDatabaseRow(row: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [toSnakeCase(key), value]),
+  );
+}
+
+function toSnakeCase(value: string) {
+  return value.replace(/[A-Z]/g, (character) => `_${character.toLowerCase()}`);
 }

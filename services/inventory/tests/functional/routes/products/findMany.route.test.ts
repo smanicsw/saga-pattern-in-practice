@@ -1,6 +1,7 @@
 import { startTestApp, type TestApp } from "../../../utils/app.js";
-import { setupTestDatabaseHooks } from "../../../utils/database.js";
+import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
 
+import { ISO_DATE_REGEX } from "../../../../src/constants/index.js";
 import * as api from "../../../apis/index.js";
 import * as fixtures from "../../../fixtures/index.js";
 
@@ -20,64 +21,49 @@ describe("GET /products", () => {
 
   describe("success", () => {
     it("should successfully list products", async () => {
-      const keyboard = fixtures.products.createOne({
-        product: {
-          sku: "SKU-KEYBOARD",
-          name: "Keyboard",
-          price: 49.99,
-        },
-      });
-      const mouse = fixtures.products.createOne({
-        product: {
-          sku: "SKU-MOUSE",
-          name: "Mouse",
-          price: 24.99,
-        },
+      const products = fixtures.products.createMany({
+        products: [
+          {
+            createdAt: "2026-05-05T10:00:00.000Z",
+            updatedAt: "2026-05-05T10:00:00.000Z",
+          },
+          {
+            createdAt: "2026-05-05T10:00:00.001Z",
+            updatedAt: "2026-05-05T10:00:00.001Z",
+          },
+        ],
       });
 
-      await api.products.createOne({
-        body: {
-          sku: keyboard.sku,
-          name: keyboard.name,
-          price: keyboard.price,
-        },
-      });
-      await api.products.createOne({
-        body: {
-          sku: mouse.sku,
-          name: mouse.name,
-          price: mouse.price,
-        },
-      });
+      await insert({ products });
 
-      const response = await api.products.findMany();
+      const findManyResponse = await api.products.findMany();
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
+      expect(findManyResponse.status).toBe(200);
+      expect(findManyResponse.body.success).toBe(true);
 
-      if (!response.body.success) {
+      if (!findManyResponse.body.success) {
         throw new Error("Expected product list to succeed.");
       }
 
-      expect(response.body.data).toEqual({
+      expect(findManyResponse.body.data).toEqual({
         items: [
           {
-            id: expect.any(String),
-            sku: keyboard.sku,
-            name: keyboard.name,
-            price: keyboard.price,
-            currency: "EUR",
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
+            id: products[0].id,
+            sku: products[0].sku,
+            name: products[0].name,
+            price: products[0].price,
+            currency: products[0].currency,
+            createdAt: expect.stringMatching(ISO_DATE_REGEX),
+            updatedAt: expect.stringMatching(ISO_DATE_REGEX),
           },
           {
-            id: expect.any(String),
-            sku: mouse.sku,
-            name: mouse.name,
-            price: mouse.price,
-            currency: "EUR",
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
+            id: products[1].id,
+            sku: products[1].sku,
+            name: products[1].name,
+            price: products[1].price,
+            currency: products[1].currency,
+            createdAt: expect.stringMatching(ISO_DATE_REGEX),
+            updatedAt: expect.stringMatching(ISO_DATE_REGEX),
           },
         ],
         pagination: {
@@ -89,34 +75,10 @@ describe("GET /products", () => {
 
     it("should paginate products with a cursor", async () => {
       const products = fixtures.products.createMany({
-        products: [
-          {
-            sku: "SKU-KEYBOARD",
-            name: "Keyboard",
-            price: 49.99,
-          },
-          {
-            sku: "SKU-MOUSE",
-            name: "Mouse",
-            price: 24.99,
-          },
-          {
-            sku: "SKU-MONITOR",
-            name: "Monitor",
-            price: 199.99,
-          },
-        ],
+        products: [{}, {}, {}],
       });
 
-      for (const product of products) {
-        await api.products.createOne({
-          body: {
-            sku: product.sku,
-            name: product.name,
-            price: product.price,
-          },
-        });
-      }
+      await insert({ products });
 
       const firstPageResponse = await api.products.findMany({
         query: {
@@ -162,119 +124,118 @@ describe("GET /products", () => {
     });
 
     it("should return invalid_request if limit is lower than one", async () => {
-      const response = await api.products.findMany({
+      const findManyResponse = await api.products.findMany({
         query: {
           limit: "0",
         },
       });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({
+      expect(findManyResponse.status).toBe(400);
+      expect(findManyResponse.body).toEqual({
         success: false,
         error: "invalid_request",
       });
     });
 
     it("should use the maximum limit if limit is above the maximum", async () => {
-      const response = await api.products.findMany({
+      const findManyResponse = await api.products.findMany({
         query: {
           limit: "101",
         },
       });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
+      expect(findManyResponse.status).toBe(200);
+      expect(findManyResponse.body.success).toBe(true);
 
-      if (!response.body.success) {
+      if (!findManyResponse.body.success) {
         throw new Error("Expected product list to succeed.");
       }
 
-      expect(response.body.data.pagination.limit).toBe(100);
+      expect(findManyResponse.body.data.pagination.limit).toBe(100);
     });
 
     it("should return invalid_request if limit is not a number", async () => {
-      const response = await api.products.findMany({
+      const findManyResponse = await api.products.findMany({
         query: {
           limit: "not-a-number",
         },
       });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({
+      expect(findManyResponse.status).toBe(400);
+      expect(findManyResponse.body).toEqual({
         success: false,
         error: "invalid_request",
       });
     });
 
     it("should ignore query params that are not part of the list contract", async () => {
-      const keyboard = fixtures.products.createOne({
-        product: {
-          sku: "SKU-KEYBOARD",
-          name: "Keyboard",
-          price: 49.99,
-        },
-      });
-      const mouse = fixtures.products.createOne({
-        product: {
-          sku: "SKU-MOUSE",
-          name: "Mouse",
-          price: 24.99,
-        },
+      const products = fixtures.products.createMany({
+        products: [
+          {
+            createdAt: "2026-05-05T10:00:00.000Z",
+            updatedAt: "2026-05-05T10:00:00.000Z",
+          },
+          {
+            createdAt: "2026-05-05T10:00:00.001Z",
+            updatedAt: "2026-05-05T10:00:00.001Z",
+          },
+        ],
       });
 
-      await api.products.createOne({
-        body: {
-          sku: keyboard.sku,
-          name: keyboard.name,
-          price: keyboard.price,
-        },
-      });
-      await api.products.createOne({
-        body: {
-          sku: mouse.sku,
-          name: mouse.name,
-          price: mouse.price,
-        },
-      });
+      await insert({ products });
 
-      const response = await api.products.findMany({
+      const findManyResponse = await api.products.findMany({
         query: {
-          sku: mouse.sku,
+          sku: products[0].sku,
         },
       });
 
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
+      expect(findManyResponse.status).toBe(200);
+      expect(findManyResponse.body.success).toBe(true);
 
-      if (!response.body.success) {
+      if (!findManyResponse.body.success) {
         throw new Error("Expected product list to succeed.");
       }
 
-      expect(response.body.data.items).toEqual([
-        expect.objectContaining({
-          sku: keyboard.sku,
-        }),
-        expect.objectContaining({
-          sku: mouse.sku,
-        }),
-      ]);
-      expect(response.body.data.pagination).toEqual({
-        limit: 20,
-        nextCursor: null,
+      expect(findManyResponse.body.data).toEqual({
+        items: [
+          {
+            id: products[0].id,
+            sku: products[0].sku,
+            name: products[0].name,
+            price: products[0].price,
+            currency: products[0].currency,
+            createdAt: expect.stringMatching(ISO_DATE_REGEX),
+            updatedAt: expect.stringMatching(ISO_DATE_REGEX),
+          },
+          {
+            id: products[1].id,
+            sku: products[1].sku,
+            name: products[1].name,
+            price: products[1].price,
+            currency: products[1].currency,
+            createdAt: expect.stringMatching(ISO_DATE_REGEX),
+            updatedAt: expect.stringMatching(ISO_DATE_REGEX),
+          },
+        ],
+        pagination: {
+          limit: 20,
+          nextCursor: null,
+        },
       });
     });
   });
 
   describe("error", () => {
     it("should return invalid_request if cursor is invalid", async () => {
-      const response = await api.products.findMany({
+      const findManyResponse = await api.products.findMany({
         query: {
           cursor: "not-a-valid-cursor",
         },
       });
 
-      expect(response.status).toBe(400);
-      expect(response.body).toEqual({
+      expect(findManyResponse.status).toBe(400);
+      expect(findManyResponse.body).toEqual({
         success: false,
         error: "invalid_request",
       });
