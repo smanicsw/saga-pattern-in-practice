@@ -1,8 +1,10 @@
 
 import type { CursorPagination } from "./pagination.entity.js";
 
+export type ProductId = string;
+
 export type Product = {
-  id: string;
+  id: ProductId;
   sku: string;
   name: string;
   price: number;
@@ -12,7 +14,7 @@ export type Product = {
 };
 
 export type ProductRow = {
-  id: string;
+  id: ProductId;
   sku: string;
   name: string;
   price: string;

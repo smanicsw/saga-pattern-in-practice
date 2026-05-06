@@ -1,11 +1,12 @@
+import type { CursorPaginationQuery } from "../entities/pagination.entity.js";
 import {
   NewProduct,
   NewProductRow,
   Product,
+  ProductId,
   ProductList,
   ProductRow,
 } from "../entities/product.entity.js";
-import type { CursorPaginationQuery } from "../entities/pagination.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 import { toStringValue } from "../utils/db-value.util.js";
 
@@ -90,6 +91,33 @@ export async function findMany({
       nextCursor,
     },
   };
+}
+
+export async function findOne({
+  productId,
+}: {
+  productId: ProductId;
+}): Promise<Product | null> {
+  const db = getQueryBuilder();
+
+  const productRow = await db<ProductRow>("products")
+    .select([
+      "id",
+      "sku",
+      "name",
+      "price",
+      "currency",
+      "created_at",
+      "updated_at",
+    ])
+    .where("id", productId)
+    .first();
+
+  if (!productRow) {
+    return null;
+  }
+
+  return transformFromRow({ productRow });
 }
 
 function transformToRow({

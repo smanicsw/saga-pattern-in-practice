@@ -67,3 +67,25 @@ export async function findMany({
     body: (await response.json()) as ApiResponse<ProductList>["body"],
   };
 }
+
+export async function findOne({
+  productId,
+  headers,
+}: ApiRequestOptions & {
+  productId: string;
+}): Promise<ApiResponse<Product>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/products/${productId}`,
+    {
+      method: "GET",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Product>["body"],
+  };
+}

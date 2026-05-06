@@ -5,5 +5,7 @@ export {
   CreateOneProductResponse,
   FindManyProductsQuery,
   FindManyProductsResponse,
+  FindOneProductParams,
+  FindOneProductResponse,
   ProductResponse,
 } from "./products.schema.js";

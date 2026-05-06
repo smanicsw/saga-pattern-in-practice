@@ -1,2 +1,1 @@
-export { createOne as createOneProduct } from "./product.manager.js";
-export { findMany as findManyProducts } from "./product.manager.js";
+export * as productManager from "./product.manager.js";

@@ -1,1 +1,2 @@
-export { createOne as createOneProduct } from "./product.repository.js";
+export * as productRepository from "./product.repository.js";
+export * as stockLevelRepository from "./stock-level.repository.js";

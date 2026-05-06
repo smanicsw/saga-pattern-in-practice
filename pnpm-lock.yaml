@@ -79,6 +79,9 @@ importers:
 
   services/order:
     dependencies:
+      '@saga/http-kit':
+        specifier: workspace:*
+        version: link:../../packages/http-kit
       '@sinclair/typebox':
         specifier: ^0.34.49
         version: 0.34.49

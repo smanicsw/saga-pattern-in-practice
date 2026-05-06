@@ -1,7 +1,9 @@
+import { NotFoundError } from "@saga/http-kit";
 import type { CursorPaginationQuery } from "../entities/pagination.entity.js";
 import {
   CreateProductInput,
   Product,
+  ProductId,
   ProductList,
 } from "../entities/product.entity.js";
 import * as productRepository from "../repositories/product.repository.js";
@@ -38,4 +40,22 @@ export async function findMany({
   return productRepository.findMany({
     query,
   });
+}
+
+export async function findOne({
+  productId,
+}: {
+  productId: ProductId;
+}): Promise<Product> {
+  const product = await productRepository.findOne({
+    productId,
+  });
+
+  if (!product) {
+    throw new NotFoundError({
+      message: "Product not found.",
+    });
+  }
+
+  return product;
 }
