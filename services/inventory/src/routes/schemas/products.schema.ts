@@ -39,6 +39,12 @@ export const FindOneProductResponse = ProductResponse;
 
 export type FindOneProductResponse = Static<typeof FindOneProductResponse>;
 
+export const DeleteOneProductParams = Type.Object({
+  productId: Type.String({ format: "uuid" }),
+});
+
+export type DeleteOneProductParams = Static<typeof DeleteOneProductParams>;
+
 export const FindManyProductsQuery = Type.Object(
   {
     limit: Type.Optional(

@@ -59,3 +59,13 @@ export async function findOne({
 
   return product;
 }
+
+export async function deleteOne({
+  productId,
+}: {
+  productId: ProductId;
+}): Promise<void> {
+  await productRepository.deleteOne({
+    productId,
+  });
+}

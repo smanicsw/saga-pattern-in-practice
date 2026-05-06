@@ -57,6 +57,24 @@ export function registerProductRoutes({
     }),
   );
 
+  router.delete(
+    "/products/:productId",
+    defineRoute({
+      schemas: {
+        params: productSchema.DeleteOneProductParams,
+      },
+      status: 204,
+      runInTransaction: (operation) => withTransaction({ operation }),
+      handler: async function ({ request }) {
+        const { productId } = request.params;
+
+        await productManager.deleteOne({
+          productId,
+        });
+      },
+    }),
+  );
+
   router.post(
     "/products",
     defineRoute({

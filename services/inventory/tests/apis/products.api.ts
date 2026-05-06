@@ -17,6 +17,11 @@ type ApiResponse<TData> = {
   body: ApiSuccessResponse<TData> | ApiErrorResponse;
 };
 
+type ApiNoContentResponse = {
+  status: number;
+  body: undefined;
+};
+
 type ApiRequestOptions = {
   headers?: Record<string, string>;
 };
@@ -83,6 +88,35 @@ export async function findOne({
       headers,
     },
   );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Product>["body"],
+  };
+}
+
+export async function deleteOne({
+  productId,
+  headers,
+}: ApiRequestOptions & {
+  productId: string;
+}): Promise<ApiResponse<Product> | ApiNoContentResponse> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/products/${productId}`,
+    {
+      method: "DELETE",
+      headers,
+    },
+  );
+
+  if (response.status === 204) {
+    return {
+      status: response.status,
+      body: undefined,
+    };
+  }
 
   return {
     status: response.status,

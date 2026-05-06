@@ -3,6 +3,7 @@ export type { HealthResponse } from "./health.schema.js";
 export {
   CreateOneProductBody,
   CreateOneProductResponse,
+  DeleteOneProductParams,
   FindManyProductsQuery,
   FindManyProductsResponse,
   FindOneProductParams,

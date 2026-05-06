@@ -111,9 +111,16 @@ export function defineRoute<
         : await execute();
 
       const { data, status: dynamicStatus } = normalizeHandlerResult(result);
+      const responseStatus = dynamicStatus ?? status;
+
+      if (responseStatus === 204) {
+        res.status(204).end();
+        return;
+      }
+
       const parsed = schemas?.response ? Value.Parse(schemas.response, data) : data;
 
-      res.status(dynamicStatus ?? status).json({
+      res.status(responseStatus).json({
         success: true,
         data: parsed,
       });

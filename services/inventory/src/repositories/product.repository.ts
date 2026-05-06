@@ -120,6 +120,18 @@ export async function findOne({
   return transformFromRow({ productRow });
 }
 
+export async function deleteOne({
+  productId,
+}: {
+  productId: ProductId;
+}): Promise<number> {
+  const db = getQueryBuilder();
+
+  return db<ProductRow>("products")
+    .where("id", productId)
+    .delete();
+}
+
 function transformToRow({
   newProduct,
 }: {
