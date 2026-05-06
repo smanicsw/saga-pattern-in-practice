@@ -1,9 +1,11 @@
 import {
-    NewProduct,
-    NewProductRow,
-    Product,
-    ProductRow,
+  NewProduct,
+  NewProductRow,
+  Product,
+  ProductList,
+  ProductRow,
 } from "../entities/product.entity.js";
+import type { CursorPaginationQuery } from "../entities/pagination.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 import { toStringValue } from "../utils/db-value.util.js";
 
@@ -13,8 +15,8 @@ export async function createOne({
   newProduct: NewProduct;
 }): Promise<Product> {
   const db = getQueryBuilder();
-  
-  const productRowToCreate = transformToRow({newProduct});
+
+  const productRowToCreate = transformToRow({ newProduct });
 
   const [createdProductRow] = await db<ProductRow>("products")
     .insert(productRowToCreate)
@@ -25,13 +27,76 @@ export async function createOne({
       "price",
       "currency",
       "created_at",
-      "updated_at"
+      "updated_at",
     ]);
 
-  return transformFromRow({productRow: createdProductRow});
+  return transformFromRow({ productRow: createdProductRow });
 }
 
-function transformToRow({newProduct}: {newProduct: NewProduct}): NewProductRow {
+export async function findMany({
+  query,
+}: {
+  query: CursorPaginationQuery;
+}): Promise<ProductList> {
+  const db = getQueryBuilder();
+
+  const baseQuery = db<ProductRow>("products");
+
+  if (query.cursor) {
+    const cursorRow = await db<ProductRow>("products")
+      .select(["id", "created_at"])
+      .where("id", query.cursor)
+      .first();
+
+    if (!cursorRow) {
+      return {
+        items: [],
+        pagination: {
+          limit: query.limit,
+          nextCursor: null,
+        },
+      };
+    }
+
+    baseQuery.whereRaw("(created_at, id) > (?, ?)", [
+      cursorRow.created_at,
+      cursorRow.id,
+    ]);
+  }
+
+  const productRows = await baseQuery
+    .clone()
+    .select([
+      "id",
+      "sku",
+      "name",
+      "price",
+      "currency",
+      "created_at",
+      "updated_at",
+    ])
+    .orderBy("created_at", "asc")
+    .orderBy("id", "asc")
+    .limit(query.limit + 1);
+
+  const pageRows = productRows.slice(0, query.limit);
+  const nextCursor =
+    productRows.length > query.limit ? pageRows[pageRows.length - 1].id : null;
+
+  return {
+    items: pageRows.map((productRow) => transformFromRow({ productRow })),
+    pagination: {
+      limit: query.limit,
+      nextCursor,
+    },
+  };
+}
+
+function transformToRow({
+  newProduct,
+}: {
+  newProduct: NewProduct;
+}): NewProductRow {
   return {
     sku: newProduct.sku,
     name: newProduct.name,
@@ -42,7 +107,11 @@ function transformToRow({newProduct}: {newProduct: NewProduct}): NewProductRow {
   };
 }
 
-function transformFromRow({productRow}: {productRow: ProductRow}): Product {
+function transformFromRow({
+  productRow,
+}: {
+  productRow: ProductRow;
+}): Product {
   return {
     id: productRow.id,
     sku: productRow.sku,

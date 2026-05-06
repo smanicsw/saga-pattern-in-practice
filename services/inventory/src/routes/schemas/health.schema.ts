@@ -4,8 +4,7 @@ export const healthResponseSchema = Type.Object(
   {
     service: Type.Literal("inventory"),
     status: Type.Literal("ok"),
-  },
-  { additionalProperties: false },
+  }
 );
 
 export type HealthResponse = Static<typeof healthResponseSchema>;

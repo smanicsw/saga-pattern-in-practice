@@ -1,4 +1,6 @@
 
+import type { CursorPagination } from "./pagination.entity.js";
+
 export type Product = {
   id: string;
   sku: string;
@@ -25,6 +27,10 @@ export type CreateProductInput = {
   price: number;
 };
 
+export type ProductList = {
+  items: Product[];
+  pagination: CursorPagination;
+};
 
 export type NewProduct = Omit<Product, "id">;
 
