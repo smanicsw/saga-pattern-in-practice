@@ -37,6 +37,10 @@ export type ReserveStockInput = {
   }>;
 };
 
+export type ConfirmReservationStockInput = ReserveStockInput;
+
+export type ReleaseReservationStockInput = ReserveStockInput;
+
 export type ReservedStockProduct = Pick<
   Stock,
   "productId" | "availableQuantity" | "reservedQuantity"

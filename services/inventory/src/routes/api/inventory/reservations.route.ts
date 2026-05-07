@@ -45,6 +45,42 @@ export function registerReservationRoutes({
   );
 
   router.post(
+    "/reservations/:reservationId/confirm",
+    defineRoute({
+      schemas: {
+        params: reservationSchema.ConfirmOneReservationParams,
+        response: reservationSchema.ConfirmOneReservationResponse,
+      },
+      runInTransaction: (operation) => withTransaction({ operation }),
+      handler: async function ({ request }) {
+        const { reservationId } = request.params;
+
+        return reservationManager.confirmOne({
+          reservationId,
+        });
+      },
+    }),
+  );
+
+  router.post(
+    "/reservations/:reservationId/release",
+    defineRoute({
+      schemas: {
+        params: reservationSchema.ReleaseOneReservationParams,
+        response: reservationSchema.ReleaseOneReservationResponse,
+      },
+      runInTransaction: (operation) => withTransaction({ operation }),
+      handler: async function ({ request }) {
+        const { reservationId } = request.params;
+
+        return reservationManager.releaseOne({
+          reservationId,
+        });
+      },
+    }),
+  );
+
+  router.post(
     "/reservations",
     defineRoute({
       schemas: {

@@ -87,3 +87,47 @@ export async function findOneByOrderId({
     body: (await response.json()) as ApiResponse<Reservation>["body"],
   };
 }
+
+export async function confirmOne({
+  reservationId,
+  headers,
+}: ApiRequestOptions & {
+  reservationId: string;
+}): Promise<ApiResponse<Reservation>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/reservations/${reservationId}/confirm`,
+    {
+      method: "POST",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Reservation>["body"],
+  };
+}
+
+export async function releaseOne({
+  reservationId,
+  headers,
+}: ApiRequestOptions & {
+  reservationId: string;
+}): Promise<ApiResponse<Reservation>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/reservations/${reservationId}/release`,
+    {
+      method: "POST",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Reservation>["body"],
+  };
+}

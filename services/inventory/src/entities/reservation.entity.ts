@@ -48,6 +48,16 @@ export type NewReservation = Omit<Reservation, "id" | "products">;
 
 export type NewReservationRow = Omit<ReservationRow, "id">;
 
+export type UpdateReservationStatus = Pick<
+  Reservation,
+  "status" | "updatedAt"
+>;
+
+export type UpdateReservationStatusRow = Pick<
+  ReservationRow,
+  "status" | "updated_at"
+>;
+
 export type CreateReservationInput = {
   orderId: OrderId;
   products: Array<{

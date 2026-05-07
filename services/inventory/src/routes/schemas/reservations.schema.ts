@@ -75,3 +75,27 @@ export const FindOneReservationResponse = ReservationResponse;
 export type FindOneReservationResponse = Static<
   typeof FindOneReservationResponse
 >;
+
+export const ConfirmOneReservationParams = FindOneReservationParams;
+
+export type ConfirmOneReservationParams = Static<
+  typeof ConfirmOneReservationParams
+>;
+
+export const ConfirmOneReservationResponse = ReservationResponse;
+
+export type ConfirmOneReservationResponse = Static<
+  typeof ConfirmOneReservationResponse
+>;
+
+export const ReleaseOneReservationParams = FindOneReservationParams;
+
+export type ReleaseOneReservationParams = Static<
+  typeof ReleaseOneReservationParams
+>;
+
+export const ReleaseOneReservationResponse = ReservationResponse;
+
+export type ReleaseOneReservationResponse = Static<
+  typeof ReleaseOneReservationResponse
+>;

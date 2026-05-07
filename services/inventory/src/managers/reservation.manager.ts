@@ -4,7 +4,10 @@ import {
   Reservation,
   ReservationId,
 } from "../entities/reservation.entity.js";
-import { ReservationNotFoundError } from "../errors/errors.js";
+import {
+  InvalidReservationStatusError,
+  ReservationNotFoundError,
+} from "../errors/errors.js";
 import * as reservationProductRepository from "../repositories/reservation-product.repository.js";
 import * as reservationRepository from "../repositories/reservation.repository.js";
 import * as stockManager from "./stock.manager.js";
@@ -95,6 +98,108 @@ export async function findOneByOrderId({
   return buildReservationWithProducts({
     reservation,
   });
+}
+
+export async function confirmOne({
+  reservationId,
+}: {
+  reservationId: ReservationId;
+}): Promise<Reservation> {
+  const reservation = await reservationRepository.findOneForUpdate({
+    reservationId,
+  });
+
+  if (!reservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  if (reservation.status === "CONFIRMED") {
+    return buildReservationWithProducts({
+      reservation,
+    });
+  }
+
+  if (reservation.status !== "PENDING") {
+    throw new InvalidReservationStatusError();
+  }
+
+  const products = await reservationProductRepository.findManyByReservationId({
+    reservationId,
+  });
+
+  await stockManager.confirmReservation({
+    confirmReservationStockInput: {
+      products,
+    },
+  });
+
+  const updatedReservation = await reservationRepository.updateOneStatus({
+    reservationId,
+    updateReservationStatus: {
+      status: "CONFIRMED",
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  if (!updatedReservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  return {
+    ...updatedReservation,
+    products,
+  };
+}
+
+export async function releaseOne({
+  reservationId,
+}: {
+  reservationId: ReservationId;
+}): Promise<Reservation> {
+  const reservation = await reservationRepository.findOneForUpdate({
+    reservationId,
+  });
+
+  if (!reservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  if (reservation.status === "RELEASED") {
+    return buildReservationWithProducts({
+      reservation,
+    });
+  }
+
+  if (reservation.status !== "PENDING") {
+    throw new InvalidReservationStatusError();
+  }
+
+  const products = await reservationProductRepository.findManyByReservationId({
+    reservationId,
+  });
+
+  await stockManager.releaseReservation({
+    releaseReservationStockInput: {
+      products,
+    },
+  });
+
+  const updatedReservation = await reservationRepository.updateOneStatus({
+    reservationId,
+    updateReservationStatus: {
+      status: "RELEASED",
+      updatedAt: new Date().toISOString(),
+    },
+  });
+
+  if (!updatedReservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  return {
+    ...updatedReservation,
+    products,
+  };
 }
 
 async function buildReservationWithProducts({
