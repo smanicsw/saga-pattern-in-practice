@@ -15,6 +15,14 @@ export async function createOne({
 }: {
   createProductInput: CreateProductInput;
 }): Promise<Product> {
+  const existingProduct = await productRepository.findOneBySku({
+    sku: createProductInput.sku,
+  });
+
+  if (existingProduct) {
+    return existingProduct;
+  }
+
   const date = new Date().toISOString();
 
   const newProduct = {
@@ -69,6 +77,18 @@ export async function updateOne({
   productId: ProductId;
   updateProductInput: UpdateProductInput;
 }): Promise<Product> {
+  const currentProduct = await productRepository.findOne({
+    productId,
+  });
+
+  if (!currentProduct) {
+    throw new ProductNotFoundError();
+  }
+
+  if (isProductUpdateNoop({ currentProduct, updateProductInput })) {
+    return currentProduct;
+  }
+
   const product = await productRepository.updateOne({
     productId,
     updateProduct: {
@@ -92,4 +112,21 @@ export async function deleteOne({
   await productRepository.deleteOne({
     productId,
   });
+}
+
+function isProductUpdateNoop({
+  currentProduct,
+  updateProductInput,
+}: {
+  currentProduct: Product;
+  updateProductInput: UpdateProductInput;
+}): boolean {
+  return (
+    (updateProductInput.name === undefined ||
+      updateProductInput.name === currentProduct.name) &&
+    (updateProductInput.description === undefined ||
+      updateProductInput.description === currentProduct.description) &&
+    (updateProductInput.price === undefined ||
+      updateProductInput.price === currentProduct.price)
+  );
 }

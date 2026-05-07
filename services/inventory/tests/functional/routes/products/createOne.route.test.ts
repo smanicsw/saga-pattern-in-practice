@@ -1,6 +1,6 @@
 import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
-import { setupTestDatabaseHooks } from "../../../utils/database.js";
+import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
 import type { Knex } from "knex";
 
 import * as api from "../../../apis/index.js";
@@ -77,6 +77,60 @@ describe("POST /products", () => {
         available_quantity: 0,
         reserved_quantity: 0,
       });
+    });
+
+    it("should return the existing product if sku already exists", async () => {
+      const product = fixtures.products.createOne({
+        product: {
+          sku: "SKU-123",
+          name: "Keyboard",
+          description: null,
+          price: 49.99,
+        },
+      });
+      const stock = fixtures.stock.createOne({
+        stock: {
+          productId: product.id,
+        },
+      });
+
+      await insert({
+        products: [product],
+        stock: [stock],
+      });
+
+      const response = await api.products.createOne({
+        body: {
+          sku: product.sku,
+          name: product.name,
+          price: product.price,
+        },
+      });
+
+      expect(response.status).toEqual(201);
+      expect(response.body.success).toEqual(true);
+
+      if (!response.body.success) {
+        throw new Error("Expected product creation retry to succeed.");
+      }
+
+      expect(response.body.data).toEqual({
+        id: product.id,
+        sku: product.sku,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      });
+
+      const productRows = await db("products").select("*");
+      const stockRows = await db("stock").select("*");
+
+      expect(productRows).toHaveLength(1);
+      expect(stockRows).toHaveLength(1);
+      expect(stockRows[0].product_id).toEqual(product.id);
     });
   });
 

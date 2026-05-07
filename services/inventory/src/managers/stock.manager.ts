@@ -57,6 +57,18 @@ export async function updateOneByProductId({
   productId: ProductId;
   updateStockInput: UpdateStockInput;
 }): Promise<Stock> {
+  const currentStock = await stockRepository.findOneByProductId({
+    productId,
+  });
+
+  if (!currentStock) {
+    throw new StockNotFoundError();
+  }
+
+  if (updateStockInput.availableQuantity === currentStock.availableQuantity) {
+    return currentStock;
+  }
+
   const stock = await stockRepository.updateOneByProductId({
     productId,
     updateStock: {

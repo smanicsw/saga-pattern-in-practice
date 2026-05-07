@@ -75,6 +75,46 @@ describe("PATCH /stock/:productId", () => {
 
       expect(findOneResponse.body.data).toEqual(updateOneResponse.body.data);
     });
+
+    it("should return the current stock without updating if payload does not change it", async () => {
+      const product = fixtures.products.createOne();
+      const stock = fixtures.stock.createOne({
+        stock: {
+          productId: product.id,
+          availableQuantity: 10,
+          reservedQuantity: 2,
+          updatedAt: "2026-05-05T10:00:00.000Z",
+        },
+      });
+
+      await insert({
+        products: [product],
+        stock: [stock],
+      });
+
+      const updateOneResponse = await api.stock.updateOne({
+        productId: product.id,
+        body: {
+          availableQuantity: stock.availableQuantity,
+        },
+      });
+
+      expect(updateOneResponse.status).toEqual(200);
+      expect(updateOneResponse.body.success).toEqual(true);
+
+      if (!updateOneResponse.body.success) {
+        throw new Error("Expected stock update to succeed.");
+      }
+
+      expect(updateOneResponse.body.data).toEqual({
+        id: stock.id,
+        productId: product.id,
+        availableQuantity: stock.availableQuantity,
+        reservedQuantity: stock.reservedQuantity,
+        createdAt: stock.createdAt,
+        updatedAt: stock.updatedAt,
+      });
+    });
   });
 
   describe("Error", () => {

@@ -110,6 +110,34 @@ export async function findOne({
   return transformFromRow({ productRow });
 }
 
+export async function findOneBySku({
+  sku,
+}: {
+  sku: string;
+}): Promise<Product | null> {
+  const db = getQueryBuilder();
+
+  const productRow = await db<ProductRow>("products")
+    .select([
+      "id",
+      "sku",
+      "name",
+      "description",
+      "price",
+      "currency",
+      "created_at",
+      "updated_at",
+    ])
+    .where("sku", sku)
+    .first();
+
+  if (!productRow) {
+    return null;
+  }
+
+  return transformFromRow({ productRow });
+}
+
 export async function updateOne({
   productId,
   updateProduct,

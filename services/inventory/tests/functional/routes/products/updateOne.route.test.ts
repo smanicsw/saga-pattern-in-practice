@@ -108,6 +108,48 @@ describe("PATCH /products/:productId", () => {
       expect(updateOneResponse.body.data.name).toEqual(product.name);
       expect(updateOneResponse.body.data.price).toEqual(product.price);
     });
+
+    it("should return the current product without updating if payload does not change it", async () => {
+      const product = fixtures.products.createOne({
+        product: {
+          name: "Keyboard",
+          description: "Mechanical keyboard",
+          price: 49.99,
+          updatedAt: "2026-05-05T10:00:00.000Z",
+        },
+      });
+
+      await insert({
+        products: [product],
+      });
+
+      const updateOneResponse = await api.products.updateOne({
+        productId: product.id,
+        body: {
+          name: product.name,
+          description: product.description,
+          price: product.price,
+        },
+      });
+
+      expect(updateOneResponse.status).toEqual(200);
+      expect(updateOneResponse.body.success).toEqual(true);
+
+      if (!updateOneResponse.body.success) {
+        throw new Error("Expected product update to succeed.");
+      }
+
+      expect(updateOneResponse.body.data).toEqual({
+        id: product.id,
+        sku: product.sku,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+      });
+    });
   });
 
   describe("Error", () => {
