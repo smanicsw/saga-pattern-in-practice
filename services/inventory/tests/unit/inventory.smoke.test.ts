@@ -10,8 +10,8 @@ describe("inventory service test setup", () => {
       price: 49.99,
     });
 
-    expect(payload.sku).toBe("SKU-123");
-    expect(payload.name).toBe("Keyboard");
-    expect(payload.price).toBe(49.99);
+    expect(payload.sku).toEqual("SKU-123");
+    expect(payload.name).toEqual("Keyboard");
+    expect(payload.price).toEqual(49.99);
   });
 });

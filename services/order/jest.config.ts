@@ -4,6 +4,7 @@ const config: Config = {
   preset: "ts-jest/presets/default-esm",
   testEnvironment: "node",
   roots: ["<rootDir>/tests"],
+  setupFiles: ["<rootDir>/tests/setup-env.cjs"],
   testMatch: ["**/*.test.ts"],
   moduleFileExtensions: ["ts", "js", "json"],
   extensionsToTreatAsEsm: [".ts"],
@@ -12,7 +13,10 @@ const config: Config = {
       "ts-jest",
       {
         useESM: true,
-        tsconfig: "<rootDir>/tsconfig.json",
+        tsconfig: "<rootDir>/tsconfig.test.json",
+        diagnostics: {
+          ignoreCodes: [151002],
+        },
       },
     ],
   },

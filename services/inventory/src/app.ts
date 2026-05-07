@@ -1,3 +1,4 @@
+import { createErrorHandler } from "@saga/http-kit";
 import express from "express";
 import { pinoHttp } from "pino-http";
 
@@ -14,6 +15,7 @@ export function createApp() {
   app.use(express.json());
   app.use(pinoHttp({ logger }));
   app.use(SERVICE_API_PREFIX, apiRoutes);
+  app.use(createErrorHandler());
 
   return app;
 }
