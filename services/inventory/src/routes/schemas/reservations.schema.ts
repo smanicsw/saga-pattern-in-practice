@@ -62,6 +62,14 @@ export const FindOneReservationParams = Type.Object({
 
 export type FindOneReservationParams = Static<typeof FindOneReservationParams>;
 
+export const FindOneReservationByOrderParams = Type.Object({
+  orderId: Type.String({ format: "uuid" }),
+});
+
+export type FindOneReservationByOrderParams = Static<
+  typeof FindOneReservationByOrderParams
+>;
+
 export const FindOneReservationResponse = ReservationResponse;
 
 export type FindOneReservationResponse = Static<

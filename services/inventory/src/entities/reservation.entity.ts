@@ -1,7 +1,7 @@
+import { OrderId } from "./order.entity.js";
 import type { ProductId } from "./product.entity.js";
 
 export type ReservationId = string;
-export type OrderId = string;
 
 export type ReservationStatus = "PENDING" | "CONFIRMED" | "RELEASED" | "FAILED";
 

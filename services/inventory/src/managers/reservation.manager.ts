@@ -1,3 +1,4 @@
+import { OrderId } from "../entities/order.entity.js";
 import {
   CreateReservationInput,
   Reservation,
@@ -18,18 +19,13 @@ export async function createOne({
   });
 
   if (existingReservation) {
-    const existingProducts = await reservationProductRepository.findManyByReservationId({
-      reservationId: existingReservation.id,
+    return buildReservationWithProducts({
+      reservation: existingReservation,
     });
-
-    return {
-      ...existingReservation,
-      products: existingProducts,
-    };
   }
 
   const date = new Date().toISOString();
-  
+
   const reservationProductsInput = aggregateReservationProducts({
     products: createReservationInput.products,
   });
@@ -78,8 +74,36 @@ export async function findOne({
     throw new ReservationNotFoundError();
   }
 
+  return buildReservationWithProducts({
+    reservation,
+  });
+}
+
+export async function findOneByOrderId({
+  orderId,
+}: {
+  orderId: OrderId;
+}): Promise<Reservation> {
+  const reservation = await reservationRepository.findOneByOrderId({
+    orderId,
+  });
+
+  if (!reservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  return buildReservationWithProducts({
+    reservation,
+  });
+}
+
+async function buildReservationWithProducts({
+  reservation,
+}: {
+  reservation: Omit<Reservation, "products">;
+}): Promise<Reservation> {
   const products = await reservationProductRepository.findManyByReservationId({
-    reservationId,
+    reservationId: reservation.id,
   });
 
   return {

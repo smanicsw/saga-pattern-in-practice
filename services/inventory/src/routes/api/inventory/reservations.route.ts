@@ -11,6 +11,23 @@ export function registerReservationRoutes({
   router: Router;
 }) {
   router.get(
+    "/reservations/by-order/:orderId",
+    defineRoute({
+      schemas: {
+        params: reservationSchema.FindOneReservationByOrderParams,
+        response: reservationSchema.FindOneReservationResponse,
+      },
+      handler: async function ({ request }) {
+        const { orderId } = request.params;
+
+        return reservationManager.findOneByOrderId({
+          orderId,
+        });
+      },
+    }),
+  );
+
+  router.get(
     "/reservations/:reservationId",
     defineRoute({
       schemas: {
