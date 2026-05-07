@@ -6,6 +6,7 @@ export const ProductResponse = Type.Object(
     id: Type.String({ format: "uuid" }),
     sku: Type.String(),
     name: Type.String(),
+    description: Type.Union([Type.String(), Type.Null()]),
     price: Type.Number({ minimum: 0 }),
     currency: Type.String({ minLength: 3, maxLength: 3 }),
     createdAt: Type.String(),
@@ -19,6 +20,7 @@ export const CreateOneProductBody = Type.Object(
   {
     sku: Type.String({ minLength: 1, maxLength: 120 }),
     name: Type.String({ minLength: 1, maxLength: 255 }),
+    description: Type.Optional(Type.String({ minLength: 1, maxLength: 2000 })),
     price: Type.Number({ minimum: 0 }),
   },
 );

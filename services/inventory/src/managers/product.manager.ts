@@ -18,6 +18,7 @@ export async function createOne({
 
   const newProduct = {
     ...createProductInput,
+    description: createProductInput.description ?? null,
     currency: "EUR",
     createdAt: date,
     updatedAt: date,

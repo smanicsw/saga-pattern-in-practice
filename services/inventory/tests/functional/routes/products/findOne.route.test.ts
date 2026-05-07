@@ -46,6 +46,7 @@ describe("GET /products/:productId", () => {
         id: product.id,
         sku: product.sku,
         name: product.name,
+        description: product.description,
         price: product.price,
         currency: product.currency,
         createdAt: expect.stringMatching(ISO_DATE_REGEX),

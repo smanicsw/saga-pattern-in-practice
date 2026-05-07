@@ -11,6 +11,7 @@ function createDefaultProduct(): Product {
     id: uuid,
     sku: `SKU-${uuid}`,
     name: "Keyboard",
+    description: "Mechanical keyboard",
     price: 49.99,
     currency: "EUR",
     createdAt: DEFAULT_CREATED_AT,

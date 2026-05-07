@@ -51,6 +51,7 @@ describe("POST /products", () => {
         id: expect.any(String),
         sku: productToCreate.sku,
         name: productToCreate.name,
+        description: null,
         price: productToCreate.price,
         currency: "EUR",
         createdAt: expect.any(String),
@@ -65,6 +66,7 @@ describe("POST /products", () => {
         id: response.body.data.id,
         sku: productToCreate.sku,
         name: productToCreate.name,
+        description: null,
         currency: "EUR",
       });
       expect(Number(productRows[0].price)).toEqual(productToCreate.price);

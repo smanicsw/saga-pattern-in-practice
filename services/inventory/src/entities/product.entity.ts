@@ -7,6 +7,7 @@ export type Product = {
   id: ProductId;
   sku: string;
   name: string;
+  description: string | null;
   price: number;
   currency: string;
   createdAt: string;
@@ -17,6 +18,7 @@ export type ProductRow = {
   id: ProductId;
   sku: string;
   name: string;
+  description: string | null;
   price: string;
   currency: string;
   created_at: string;
@@ -26,6 +28,7 @@ export type ProductRow = {
 export type CreateProductInput = {
   sku: string;
   name: string;
+  description?: string;
   price: number;
 };
 
