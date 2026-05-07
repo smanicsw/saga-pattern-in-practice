@@ -41,6 +41,32 @@ export const FindOneProductResponse = ProductResponse;
 
 export type FindOneProductResponse = Static<typeof FindOneProductResponse>;
 
+export const UpdateOneProductParams = Type.Object({
+  productId: Type.String({ format: "uuid" }),
+});
+
+export type UpdateOneProductParams = Static<typeof UpdateOneProductParams>;
+
+export const UpdateOneProductBody = Type.Object(
+  {
+    name: Type.Optional(Type.String({ minLength: 1, maxLength: 255 })),
+    description: Type.Optional(
+      Type.Union([Type.String({ minLength: 1, maxLength: 2000 }), Type.Null()]),
+    ),
+    price: Type.Optional(Type.Number({ minimum: 0 })),
+  },
+  {
+    additionalProperties: false,
+    minProperties: 1,
+  },
+);
+
+export type UpdateOneProductBody = Static<typeof UpdateOneProductBody>;
+
+export const UpdateOneProductResponse = ProductResponse;
+
+export type UpdateOneProductResponse = Static<typeof UpdateOneProductResponse>;
+
 export const DeleteOneProductParams = Type.Object({
   productId: Type.String({ format: "uuid" }),
 });

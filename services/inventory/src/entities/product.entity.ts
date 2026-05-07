@@ -32,6 +32,16 @@ export type CreateProductInput = {
   price: number;
 };
 
+export type UpdateProductInput = {
+  name?: string;
+  description?: string | null;
+  price?: number;
+};
+
+export type UpdateProduct = UpdateProductInput & {
+  updatedAt: string;
+};
+
 export type ProductList = {
   items: Product[];
   pagination: CursorPagination;
@@ -40,3 +50,7 @@ export type ProductList = {
 export type NewProduct = Omit<Product, "id">;
 
 export type NewProductRow = Omit<ProductRow, "id">;
+
+export type UpdateProductRow = Partial<
+  Pick<ProductRow, "name" | "description" | "price" | "updated_at">
+>;

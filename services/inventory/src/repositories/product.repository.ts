@@ -6,6 +6,8 @@ import {
   ProductId,
   ProductList,
   ProductRow,
+  UpdateProduct,
+  UpdateProductRow,
 } from "../entities/product.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 import toStringValue from "../tools/to-string-value.js";
@@ -108,6 +110,38 @@ export async function findOne({
   return transformFromRow({ productRow });
 }
 
+export async function updateOne({
+  productId,
+  updateProduct,
+}: {
+  productId: ProductId;
+  updateProduct: UpdateProduct;
+}): Promise<Product | null> {
+  const db = getQueryBuilder();
+
+  const productRowToUpdate = transformUpdateToRow({ updateProduct });
+
+  const [updatedProductRow] = await db<ProductRow>("products")
+    .where("id", productId)
+    .update(productRowToUpdate)
+    .returning([
+      "id",
+      "sku",
+      "name",
+      "description",
+      "price",
+      "currency",
+      "created_at",
+      "updated_at",
+    ]);
+
+  if (!updatedProductRow) {
+    return null;
+  }
+
+  return transformFromRow({ productRow: updatedProductRow });
+}
+
 export async function deleteOne({
   productId,
 }: {
@@ -133,6 +167,23 @@ function transformToRow({
     currency: newProduct.currency,
     created_at: newProduct.createdAt,
     updated_at: newProduct.updatedAt,
+  };
+}
+
+function transformUpdateToRow({
+  updateProduct,
+}: {
+  updateProduct: UpdateProduct;
+}): UpdateProductRow {
+  return {
+    ...(updateProduct.name !== undefined ? { name: updateProduct.name } : {}),
+    ...(updateProduct.description !== undefined
+      ? { description: updateProduct.description }
+      : {}),
+    ...(updateProduct.price !== undefined
+      ? { price: String(updateProduct.price) }
+      : {}),
+    updated_at: updateProduct.updatedAt,
   };
 }
 

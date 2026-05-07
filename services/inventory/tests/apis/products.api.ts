@@ -95,6 +95,34 @@ export async function findOne({
   };
 }
 
+export async function updateOne({
+  productId,
+  body,
+  headers,
+}: ApiRequestOptions & {
+  productId: string;
+  body: unknown;
+}): Promise<ApiResponse<Product>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/products/${productId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "content-type": "application/json",
+        ...headers,
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Product>["body"],
+  };
+}
+
 export async function deleteOne({
   productId,
   headers,

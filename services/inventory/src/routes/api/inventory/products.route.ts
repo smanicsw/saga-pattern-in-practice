@@ -75,6 +75,26 @@ export function registerProductRoutes({
     }),
   );
 
+  router.patch(
+    "/products/:productId",
+    defineRoute({
+      schemas: {
+        params: productSchema.UpdateOneProductParams,
+        body: productSchema.UpdateOneProductBody,
+        response: productSchema.UpdateOneProductResponse,
+      },
+      runInTransaction: (operation) => withTransaction({ operation }),
+      handler: async function ({ request }) {
+        const { productId } = request.params;
+
+        return productManager.updateOne({
+          productId,
+          updateProductInput: request.body,
+        });
+      },
+    }),
+  );
+
   router.post(
     "/products",
     defineRoute({

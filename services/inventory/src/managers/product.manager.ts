@@ -4,6 +4,7 @@ import {
   Product,
   ProductId,
   ProductList,
+  UpdateProductInput,
 } from "../entities/product.entity.js";
 import { ProductNotFoundError } from "../errors/errors.js";
 import * as productRepository from "../repositories/product.repository.js";
@@ -52,6 +53,28 @@ export async function findOne({
 }): Promise<Product> {
   const product = await productRepository.findOne({
     productId,
+  });
+
+  if (!product) {
+    throw new ProductNotFoundError();
+  }
+
+  return product;
+}
+
+export async function updateOne({
+  productId,
+  updateProductInput,
+}: {
+  productId: ProductId;
+  updateProductInput: UpdateProductInput;
+}): Promise<Product> {
+  const product = await productRepository.updateOne({
+    productId,
+    updateProduct: {
+      ...updateProductInput,
+      updatedAt: new Date().toISOString(),
+    },
   });
 
   if (!product) {
