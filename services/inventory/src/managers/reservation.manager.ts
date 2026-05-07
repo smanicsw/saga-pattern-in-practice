@@ -1,7 +1,9 @@
 import {
   CreateReservationInput,
   Reservation,
+  ReservationId,
 } from "../entities/reservation.entity.js";
+import { ReservationNotFoundError } from "../errors/errors.js";
 import * as reservationProductRepository from "../repositories/reservation-product.repository.js";
 import * as reservationRepository from "../repositories/reservation.repository.js";
 import * as stockManager from "./stock.manager.js";
@@ -60,6 +62,29 @@ export async function createOne({
   return {
     ...reservation,
     products: reservationProducts,
+  };
+}
+
+export async function findOne({
+  reservationId,
+}: {
+  reservationId: ReservationId;
+}): Promise<Reservation> {
+  const reservation = await reservationRepository.findOne({
+    reservationId,
+  });
+
+  if (!reservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  const products = await reservationProductRepository.findManyByReservationId({
+    reservationId,
+  });
+
+  return {
+    ...reservation,
+    products,
   };
 }
 

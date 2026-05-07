@@ -29,3 +29,13 @@ export class InsufficientStockError extends HttpError {
     });
   }
 }
+
+export class ReservationNotFoundError extends HttpError {
+  constructor() {
+    super({
+      status: 404,
+      code: "reservation_not_found",
+      message: "Reservation not found.",
+    });
+  }
+}

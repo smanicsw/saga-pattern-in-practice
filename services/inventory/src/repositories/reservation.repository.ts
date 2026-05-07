@@ -3,6 +3,7 @@ import {
   NewReservationRow,
   OrderId,
   Reservation,
+  ReservationId,
   ReservationRow,
 } from "../entities/reservation.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
@@ -34,6 +35,25 @@ export async function findOneByOrderId({
   const reservationRow = await db<ReservationRow>("reservations")
     .select(["id", "order_id", "status", "created_at", "updated_at"])
     .where("order_id", orderId)
+    .first();
+
+  if (!reservationRow) {
+    return null;
+  }
+
+  return transformFromRow({ reservationRow });
+}
+
+export async function findOne({
+  reservationId,
+}: {
+  reservationId: ReservationId;
+}): Promise<Omit<Reservation, "products"> | null> {
+  const db = getQueryBuilder();
+
+  const reservationRow = await db<ReservationRow>("reservations")
+    .select(["id", "order_id", "status", "created_at", "updated_at"])
+    .where("id", reservationId)
     .first();
 
   if (!reservationRow) {

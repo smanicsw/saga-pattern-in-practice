@@ -43,3 +43,25 @@ export async function createOne({
     body: (await response.json()) as ApiResponse<Reservation>["body"],
   };
 }
+
+export async function findOne({
+  reservationId,
+  headers,
+}: ApiRequestOptions & {
+  reservationId: string;
+}): Promise<ApiResponse<Reservation>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/reservations/${reservationId}`,
+    {
+      method: "GET",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Reservation>["body"],
+  };
+}

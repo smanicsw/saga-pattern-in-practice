@@ -10,6 +10,23 @@ export function registerReservationRoutes({
 }: {
   router: Router;
 }) {
+  router.get(
+    "/reservations/:reservationId",
+    defineRoute({
+      schemas: {
+        params: reservationSchema.FindOneReservationParams,
+        response: reservationSchema.FindOneReservationResponse,
+      },
+      handler: async function ({ request }) {
+        const { reservationId } = request.params;
+
+        return reservationManager.findOne({
+          reservationId,
+        });
+      },
+    }),
+  );
+
   router.post(
     "/reservations",
     defineRoute({

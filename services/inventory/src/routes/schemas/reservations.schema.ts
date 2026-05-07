@@ -55,3 +55,15 @@ export const CreateOneReservationResponse = ReservationResponse;
 export type CreateOneReservationResponse = Static<
   typeof CreateOneReservationResponse
 >;
+
+export const FindOneReservationParams = Type.Object({
+  reservationId: Type.String({ format: "uuid" }),
+});
+
+export type FindOneReservationParams = Static<typeof FindOneReservationParams>;
+
+export const FindOneReservationResponse = ReservationResponse;
+
+export type FindOneReservationResponse = Static<
+  typeof FindOneReservationResponse
+>;
