@@ -1,7 +1,7 @@
 exports.up = async function (knex) {
   await knex.raw('create extension if not exists "pgcrypto"');
 
-  return knex.schema.createTable("stock_levels", function (table) {
+  return knex.schema.createTable("stock", function (table) {
     table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
     table
       .uuid("product_id")
@@ -20,5 +20,5 @@ exports.up = async function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists("stock_levels");
+  return knex.schema.dropTableIfExists("stock");
 };

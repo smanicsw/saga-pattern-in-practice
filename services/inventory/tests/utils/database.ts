@@ -41,7 +41,7 @@ export async function cleanTestDatabase() {
     truncate table
       inventory_reservation_items,
       inventory_reservations,
-      stock_levels,
+      stock,
       products
     restart identity cascade
   `);

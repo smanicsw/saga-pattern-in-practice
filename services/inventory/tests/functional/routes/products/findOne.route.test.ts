@@ -21,7 +21,7 @@ describe("GET /products/:productId", () => {
     await app?.close();
   });
 
-  describe("success", () => {
+  describe("Success", () => {
     it("should successfully find a product", async () => {
       const [product] = fixtures.products.createMany({
         products: [{}],
@@ -35,8 +35,8 @@ describe("GET /products/:productId", () => {
         productId: product.id,
       });
 
-      expect(findOneResponse.status).toBe(200);
-      expect(findOneResponse.body.success).toBe(true);
+      expect(findOneResponse.status).toEqual(200);
+      expect(findOneResponse.body.success).toEqual(true);
 
       if (!findOneResponse.body.success) {
         throw new Error("Expected product lookup to succeed.");
@@ -54,13 +54,13 @@ describe("GET /products/:productId", () => {
     });
   });
 
-  describe("error", () => {
+  describe("Error", () => {
     it("should return invalid_request if product id is invalid", async () => {
       const findOneResponse = await api.products.findOne({
         productId: "not-a-product-id",
       });
 
-      expect(findOneResponse.status).toBe(400);
+      expect(findOneResponse.status).toEqual(400);
       expect(findOneResponse.body).toEqual({
         success: false,
         error: "invalid_request",
@@ -72,10 +72,10 @@ describe("GET /products/:productId", () => {
         productId: randomUUID(),
       });
 
-      expect(findOneResponse.status).toBe(404);
+      expect(findOneResponse.status).toEqual(404);
       expect(findOneResponse.body).toEqual({
         success: false,
-        error: "not_found",
+        error: "product_not_found",
       });
     });
   });

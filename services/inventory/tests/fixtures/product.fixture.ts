@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import type { Product } from "../../src/entities/index.js";
+import type { Product } from "../../src/entities/product.entity.js";
 
 const DEFAULT_CREATED_AT = "2026-05-05T10:00:00.000Z";
 

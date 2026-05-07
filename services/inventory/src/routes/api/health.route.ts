@@ -1,7 +1,7 @@
 import type { Router } from "express";
 import { defineRoute } from "@saga/http-kit";
 
-import { healthResponseSchema } from "../schemas/index.js";
+import { healthResponseSchema } from "../schemas/health.schema.js";
 
 export function registerHealthRoute({ router }: { router: Router }) {
   router.get(

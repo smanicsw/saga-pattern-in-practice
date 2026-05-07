@@ -22,7 +22,7 @@ describe("POST /products", () => {
     await app?.close();
   });
 
-  describe("success", () => {
+  describe("Success", () => {
     it("should successfully create product", async () => {
       const productToCreate = fixtures.products.createOne({
         product: {
@@ -40,8 +40,8 @@ describe("POST /products", () => {
         },
       });
 
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
+      expect(response.status).toEqual(201);
+      expect(response.body.success).toEqual(true);
 
       if (!response.body.success) {
         throw new Error("Expected product creation to succeed.");
@@ -58,7 +58,7 @@ describe("POST /products", () => {
       });
 
       const productRows = await db("products").select("*");
-      const stockLevelRows = await db("stock_levels").select("*");
+      const stockRows = await db("stock").select("*");
 
       expect(productRows).toHaveLength(1);
       expect(productRows[0]).toMatchObject({
@@ -67,10 +67,10 @@ describe("POST /products", () => {
         name: productToCreate.name,
         currency: "EUR",
       });
-      expect(Number(productRows[0].price)).toBe(productToCreate.price);
+      expect(Number(productRows[0].price)).toEqual(productToCreate.price);
 
-      expect(stockLevelRows).toHaveLength(1);
-      expect(stockLevelRows[0]).toMatchObject({
+      expect(stockRows).toHaveLength(1);
+      expect(stockRows[0]).toMatchObject({
         product_id: response.body.data.id,
         available_quantity: 0,
         reserved_quantity: 0,
@@ -78,7 +78,7 @@ describe("POST /products", () => {
     });
   });
 
-  describe("error", () => {
+  describe("Error", () => {
     it("should return invalid_request if product payload is invalid", async () => {
       const response = await api.products.createOne({
         body: {
@@ -88,17 +88,17 @@ describe("POST /products", () => {
         },
       });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toEqual(400);
       expect(response.body).toEqual({
         success: false,
         error: "invalid_request",
       });
 
       const productRows = await db("products").select("*");
-      const stockLevelRows = await db("stock_levels").select("*");
+      const stockRows = await db("stock").select("*");
 
       expect(productRows).toHaveLength(0);
-      expect(stockLevelRows).toHaveLength(0);
+      expect(stockRows).toHaveLength(0);
     });
   });
 });

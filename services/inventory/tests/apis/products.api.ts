@@ -1,5 +1,5 @@
 import { SERVICE_API_PREFIX } from "../../src/constants/index.js";
-import type { Product, ProductList } from "../../src/entities/index.js";
+import type { Product, ProductList } from "../../src/entities/product.entity.js";
 import { getBaseUrl } from "./client.js";
 
 type ApiSuccessResponse<TData> = {

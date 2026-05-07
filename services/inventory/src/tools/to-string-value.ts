@@ -1,4 +1,4 @@
-export function toStringValue(value: unknown): string {
+export default function toStringValue(value: unknown): string {
   if (value === null || value === undefined) {
     throw new Error("expected non-null DB value");
   }

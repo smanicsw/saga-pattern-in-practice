@@ -19,7 +19,7 @@ describe("GET /products", () => {
     await app?.close();
   });
 
-  describe("success", () => {
+  describe("Success", () => {
     it("should successfully list products", async () => {
       const products = fixtures.products.createMany({
         products: [
@@ -38,8 +38,8 @@ describe("GET /products", () => {
 
       const findManyResponse = await api.products.findMany();
 
-      expect(findManyResponse.status).toBe(200);
-      expect(findManyResponse.body.success).toBe(true);
+      expect(findManyResponse.status).toEqual(200);
+      expect(findManyResponse.body.success).toEqual(true);
 
       if (!findManyResponse.body.success) {
         throw new Error("Expected product list to succeed.");
@@ -86,8 +86,8 @@ describe("GET /products", () => {
         },
       });
 
-      expect(firstPageResponse.status).toBe(200);
-      expect(firstPageResponse.body.success).toBe(true);
+      expect(firstPageResponse.status).toEqual(200);
+      expect(firstPageResponse.body.success).toEqual(true);
 
       if (!firstPageResponse.body.success) {
         throw new Error("Expected product list to succeed.");
@@ -106,15 +106,15 @@ describe("GET /products", () => {
         },
       });
 
-      expect(secondPageResponse.status).toBe(200);
-      expect(secondPageResponse.body.success).toBe(true);
+      expect(secondPageResponse.status).toEqual(200);
+      expect(secondPageResponse.body.success).toEqual(true);
 
       if (!secondPageResponse.body.success) {
         throw new Error("Expected product list to succeed.");
       }
 
       expect(secondPageResponse.body.data.items).toHaveLength(1);
-      expect(secondPageResponse.body.data.items[0].id).not.toBe(
+      expect(secondPageResponse.body.data.items[0].id).not.toEqual(
         firstPageResponse.body.data.items[0].id,
       );
       expect(secondPageResponse.body.data.pagination).toEqual({
@@ -130,7 +130,7 @@ describe("GET /products", () => {
         },
       });
 
-      expect(findManyResponse.status).toBe(400);
+      expect(findManyResponse.status).toEqual(400);
       expect(findManyResponse.body).toEqual({
         success: false,
         error: "invalid_request",
@@ -144,14 +144,14 @@ describe("GET /products", () => {
         },
       });
 
-      expect(findManyResponse.status).toBe(200);
-      expect(findManyResponse.body.success).toBe(true);
+      expect(findManyResponse.status).toEqual(200);
+      expect(findManyResponse.body.success).toEqual(true);
 
       if (!findManyResponse.body.success) {
         throw new Error("Expected product list to succeed.");
       }
 
-      expect(findManyResponse.body.data.pagination.limit).toBe(100);
+      expect(findManyResponse.body.data.pagination.limit).toEqual(100);
     });
 
     it("should return invalid_request if limit is not a number", async () => {
@@ -161,7 +161,7 @@ describe("GET /products", () => {
         },
       });
 
-      expect(findManyResponse.status).toBe(400);
+      expect(findManyResponse.status).toEqual(400);
       expect(findManyResponse.body).toEqual({
         success: false,
         error: "invalid_request",
@@ -190,8 +190,8 @@ describe("GET /products", () => {
         },
       });
 
-      expect(findManyResponse.status).toBe(200);
-      expect(findManyResponse.body.success).toBe(true);
+      expect(findManyResponse.status).toEqual(200);
+      expect(findManyResponse.body.success).toEqual(true);
 
       if (!findManyResponse.body.success) {
         throw new Error("Expected product list to succeed.");
@@ -226,7 +226,7 @@ describe("GET /products", () => {
     });
   });
 
-  describe("error", () => {
+  describe("Error", () => {
     it("should return invalid_request if cursor is invalid", async () => {
       const findManyResponse = await api.products.findMany({
         query: {
@@ -234,7 +234,7 @@ describe("GET /products", () => {
         },
       });
 
-      expect(findManyResponse.status).toBe(400);
+      expect(findManyResponse.status).toEqual(400);
       expect(findManyResponse.body).toEqual({
         success: false,
         error: "invalid_request",

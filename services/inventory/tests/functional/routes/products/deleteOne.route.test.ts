@@ -21,13 +21,13 @@ describe("DELETE /products/:productId", () => {
     await app?.close();
   });
 
-  describe("success", () => {
+  describe("Success", () => {
     it("should successfully delete a product", async () => {
       const [product] = fixtures.products.createMany({
         products: [{}],
       });
-      const stockLevel = fixtures.stock.createOne({
-        stockLevel: {
+      const stock = fixtures.stock.createOne({
+        stock: {
           productId: product.id,
           availableQuantity: 10,
           reservedQuantity: 2,
@@ -36,22 +36,22 @@ describe("DELETE /products/:productId", () => {
 
       await insert({
         products: [product],
-        stock_levels: [stockLevel],
+        stock: [stock],
       });
 
       const deleteOneResponse = await api.products.deleteOne({
         productId: product.id,
       });
 
-      expect(deleteOneResponse.status).toBe(204);
+      expect(deleteOneResponse.status).toEqual(204);
       expect(deleteOneResponse.body).toBeUndefined();
 
       const db = getDatabase();
       const productRows = await db("products").select("*");
-      const stockLevelRows = await db("stock_levels").select("*");
+      const stockRows = await db("stock").select("*");
 
       expect(productRows).toHaveLength(0);
-      expect(stockLevelRows).toHaveLength(0);
+      expect(stockRows).toHaveLength(0);
     });
 
     it("should return no content if product does not exist", async () => {
@@ -59,18 +59,18 @@ describe("DELETE /products/:productId", () => {
         productId: randomUUID(),
       });
 
-      expect(deleteOneResponse.status).toBe(204);
+      expect(deleteOneResponse.status).toEqual(204);
       expect(deleteOneResponse.body).toBeUndefined();
     });
   });
 
-  describe("error", () => {
+  describe("Error", () => {
     it("should return invalid_request if product id is invalid", async () => {
       const deleteOneResponse = await api.products.deleteOne({
         productId: "not-a-product-id",
       });
 
-      expect(deleteOneResponse.status).toBe(400);
+      expect(deleteOneResponse.status).toEqual(400);
       expect(deleteOneResponse.body).toEqual({
         success: false,
         error: "invalid_request",

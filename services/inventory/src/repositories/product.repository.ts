@@ -8,7 +8,7 @@ import {
   ProductRow,
 } from "../entities/product.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
-import { toStringValue } from "../utils/db-value.util.js";
+import toStringValue from "../tools/to-string-value.js";
 
 export async function createOne({
   newProduct,
@@ -41,32 +41,7 @@ export async function findMany({
 }): Promise<ProductList> {
   const db = getQueryBuilder();
 
-  const baseQuery = db<ProductRow>("products");
-
-  if (query.cursor) {
-    const cursorRow = await db<ProductRow>("products")
-      .select(["id", "created_at"])
-      .where("id", query.cursor)
-      .first();
-
-    if (!cursorRow) {
-      return {
-        items: [],
-        pagination: {
-          limit: query.limit,
-          nextCursor: null,
-        },
-      };
-    }
-
-    baseQuery.whereRaw("(created_at, id) > (?, ?)", [
-      cursorRow.created_at,
-      cursorRow.id,
-    ]);
-  }
-
-  const productRows = await baseQuery
-    .clone()
+  const productRows: ProductRow[] = await db<ProductRow>("products")
     .select([
       "id",
       "sku",
@@ -76,6 +51,16 @@ export async function findMany({
       "created_at",
       "updated_at",
     ])
+    .modify((queryBuilder) => {
+      if (!query.cursor) {
+        return;
+      }
+
+      queryBuilder.whereRaw(
+        "(created_at, id) > (select created_at, id from products where id = ?)",
+        [query.cursor],
+      );
+    })
     .orderBy("created_at", "asc")
     .orderBy("id", "asc")
     .limit(query.limit + 1);
