@@ -1,13 +1,13 @@
 exports.up = async function (knex) {
   await knex.raw('create extension if not exists "pgcrypto"');
 
-  return knex.schema.createTable("inventory_reservation_items", function (table) {
+  return knex.schema.createTable("reservation_products", function (table) {
     table.uuid("id").primary().defaultTo(knex.raw("gen_random_uuid()"));
     table
       .uuid("reservation_id")
       .notNullable()
       .references("id")
-      .inTable("inventory_reservations")
+      .inTable("reservations")
       .onDelete("CASCADE");
     table
       .uuid("product_id")
@@ -26,5 +26,5 @@ exports.up = async function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists("inventory_reservation_items");
+  return knex.schema.dropTableIfExists("reservation_products");
 };

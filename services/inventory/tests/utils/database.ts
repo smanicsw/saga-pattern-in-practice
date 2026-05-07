@@ -32,6 +32,8 @@ export async function migrateTestDatabase() {
   await db.migrate.latest({
     directory: migrationsDirectory,
   });
+
+  await renameLegacyReservationTables();
 }
 
 export async function cleanTestDatabase() {
@@ -39,12 +41,39 @@ export async function cleanTestDatabase() {
 
   await db.raw(`
     truncate table
-      inventory_reservation_items,
-      inventory_reservations,
+      reservation_products,
+      reservations,
       stock,
       products
     restart identity cascade
   `);
+}
+
+async function renameLegacyReservationTables() {
+  const db = getDatabase();
+
+  const hasLegacyReservationProducts = await db.schema.hasTable(
+    "inventory_reservation_items",
+  );
+  const hasReservationProducts = await db.schema.hasTable(
+    "reservation_products",
+  );
+
+  if (hasLegacyReservationProducts && !hasReservationProducts) {
+    await db.schema.renameTable(
+      "inventory_reservation_items",
+      "reservation_products",
+    );
+  }
+
+  const hasLegacyReservations = await db.schema.hasTable(
+    "inventory_reservations",
+  );
+  const hasReservations = await db.schema.hasTable("reservations");
+
+  if (hasLegacyReservations && !hasReservations) {
+    await db.schema.renameTable("inventory_reservations", "reservations");
+  }
 }
 
 export async function insert(
@@ -64,8 +93,13 @@ export async function insert(
 }
 
 function transformToDatabaseRow(row: Record<string, unknown>) {
+  const { items, products, ...rowWithoutNestedFields } = row;
+
   return Object.fromEntries(
-    Object.entries(row).map(([key, value]) => [toSnakeCase(key), value]),
+    Object.entries(rowWithoutNestedFields).map(([key, value]) => [
+      toSnakeCase(key),
+      value,
+    ]),
   );
 }
 

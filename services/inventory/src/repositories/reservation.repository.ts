@@ -1,0 +1,71 @@
+import {
+  NewReservation,
+  NewReservationRow,
+  OrderId,
+  Reservation,
+  ReservationRow,
+} from "../entities/reservation.entity.js";
+import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
+import toStringValue from "../tools/to-string-value.js";
+
+export async function createOne({
+  newReservation,
+}: {
+  newReservation: NewReservation;
+}): Promise<Omit<Reservation, "products">> {
+  const db = getQueryBuilder();
+
+  const reservationRowToCreate = transformToRow({ newReservation });
+
+  const [createdReservationRow] = await db<ReservationRow>("reservations")
+    .insert(reservationRowToCreate)
+    .returning(["id", "order_id", "status", "created_at", "updated_at"]);
+
+  return transformFromRow({ reservationRow: createdReservationRow });
+}
+
+export async function findOneByOrderId({
+  orderId,
+}: {
+  orderId: OrderId;
+}): Promise<Omit<Reservation, "products"> | null> {
+  const db = getQueryBuilder();
+
+  const reservationRow = await db<ReservationRow>("reservations")
+    .select(["id", "order_id", "status", "created_at", "updated_at"])
+    .where("order_id", orderId)
+    .first();
+
+  if (!reservationRow) {
+    return null;
+  }
+
+  return transformFromRow({ reservationRow });
+}
+
+function transformToRow({
+  newReservation,
+}: {
+  newReservation: NewReservation;
+}): NewReservationRow {
+  return {
+    order_id: newReservation.orderId,
+    status: newReservation.status,
+    created_at: newReservation.createdAt,
+    updated_at: newReservation.updatedAt,
+  };
+}
+
+function transformFromRow({
+  reservationRow,
+}: {
+  reservationRow: ReservationRow;
+}): Omit<Reservation, "products"> {
+  return {
+    id: reservationRow.id,
+    orderId: reservationRow.order_id,
+    status: reservationRow.status,
+    createdAt: toStringValue(reservationRow.created_at),
+    updatedAt: toStringValue(reservationRow.updated_at),
+  };
+}

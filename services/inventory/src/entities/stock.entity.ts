@@ -26,6 +26,28 @@ export type CreateStockInput = {
   reservedQuantity?: number;
 };
 
+export type UpdateStockInput = {
+  availableQuantity: number;
+};
+
+export type ReserveStockInput = {
+  products: Array<{
+    productId: ProductId;
+    quantity: number;
+  }>;
+};
+
+export type ReservedStockProduct = Pick<
+  Stock,
+  "productId" | "availableQuantity" | "reservedQuantity"
+>;
+
+export type UpdateStock = UpdateStockInput & {
+  updatedAt: string;
+};
+
 export type NewStock = Omit<Stock, "id">;
 
 export type NewStockRow = Omit<StockRow, "id">;
+
+export type UpdateStockRow = Pick<StockRow, "available_quantity" | "updated_at">;
