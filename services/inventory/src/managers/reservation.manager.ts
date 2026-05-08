@@ -1,21 +1,32 @@
 import { OrderId } from "../entities/order.entity.js";
 import {
+  InventoryEventType,
+  InventoryEventVersion,
+  ReservationConfirmedPayload,
+  ReservationCreatedPayload,
+  ReservationReleasedPayload,
+} from "../entities/inventory-event.entity.js";
+import {
   CreateReservationInput,
   Reservation,
   ReservationId,
 } from "../entities/reservation.entity.js";
+import type { OutboxEventMetadata } from "../entities/outbox-event.entity.js";
 import {
   InvalidReservationStatusError,
   ReservationNotFoundError,
 } from "../errors/errors.js";
 import * as reservationProductRepository from "../repositories/reservation-product.repository.js";
 import * as reservationRepository from "../repositories/reservation.repository.js";
+import * as outboxEventManager from "./outbox-event.manager.js";
 import * as stockManager from "./stock.manager.js";
 
 export async function createOne({
   createReservationInput,
+  outboxEventMetadata,
 }: {
   createReservationInput: CreateReservationInput;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Reservation> {
   const existingReservation = await reservationRepository.findOneByOrderId({
     orderId: createReservationInput.orderId,
@@ -58,10 +69,30 @@ export async function createOne({
     })),
   });
 
-  return {
+  const createdReservation = {
     ...reservation,
     products: reservationProducts,
   };
+
+  const createReservationOutboxEvent = {
+    type: InventoryEventType.ReservationCreated,
+    version: InventoryEventVersion.ReservationCreated,
+    action: "create",
+    aggregate: {
+      type: "reservation",
+      id: reservation.id,
+    },
+    payload: {
+      current: createdReservation,
+    },
+    ...(outboxEventMetadata ?? {}),
+  } as const;
+
+  await outboxEventManager.createOne<ReservationCreatedPayload>(
+    createReservationOutboxEvent,
+  );
+
+  return createdReservation;
 }
 
 export async function findOne({
@@ -102,8 +133,10 @@ export async function findOneByOrderId({
 
 export async function confirmOne({
   reservationId,
+  outboxEventMetadata,
 }: {
   reservationId: ReservationId;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Reservation> {
   const reservation = await reservationRepository.findOneForUpdate({
     reservationId,
@@ -127,7 +160,7 @@ export async function confirmOne({
     reservationId,
   });
 
-  await stockManager.confirmReservation({
+  const stockChanges = await stockManager.confirmReservation({
     confirmReservationStockInput: {
       products,
     },
@@ -145,16 +178,52 @@ export async function confirmOne({
     throw new ReservationNotFoundError();
   }
 
-  return {
+  const confirmedReservation = {
     ...updatedReservation,
     products,
   };
+
+  const confirmReservationOutboxEvent = {
+    type: InventoryEventType.ReservationConfirmed,
+    version: InventoryEventVersion.ReservationConfirmed,
+    action: "update",
+    aggregate: {
+      type: "reservation",
+      id: reservation.id,
+    },
+    payload: {
+      reservation: {
+        id: reservation.id,
+        orderId: reservation.orderId,
+        previous: {
+          status: "PENDING",
+        },
+        current: {
+          status: "CONFIRMED",
+        },
+      },
+      products: products.map((product) => ({
+        productId: product.productId,
+        quantity: product.quantity,
+      })),
+      stockChanges,
+    },
+    ...(outboxEventMetadata ?? {}),
+  } as const;
+
+  await outboxEventManager.createOne<ReservationConfirmedPayload>(
+    confirmReservationOutboxEvent,
+  );
+
+  return confirmedReservation;
 }
 
 export async function releaseOne({
   reservationId,
+  outboxEventMetadata,
 }: {
   reservationId: ReservationId;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Reservation> {
   const reservation = await reservationRepository.findOneForUpdate({
     reservationId,
@@ -178,7 +247,7 @@ export async function releaseOne({
     reservationId,
   });
 
-  await stockManager.releaseReservation({
+  const stockChanges = await stockManager.releaseReservation({
     releaseReservationStockInput: {
       products,
     },
@@ -196,10 +265,44 @@ export async function releaseOne({
     throw new ReservationNotFoundError();
   }
 
-  return {
+  const releasedReservation = {
     ...updatedReservation,
     products,
   };
+
+  const releaseReservationOutboxEvent = {
+    type: InventoryEventType.ReservationReleased,
+    version: InventoryEventVersion.ReservationReleased,
+    action: "update",
+    aggregate: {
+      type: "reservation",
+      id: reservation.id,
+    },
+    payload: {
+      reservation: {
+        id: reservation.id,
+        orderId: reservation.orderId,
+        previous: {
+          status: "PENDING",
+        },
+        current: {
+          status: "RELEASED",
+        },
+      },
+      products: products.map((product) => ({
+        productId: product.productId,
+        quantity: product.quantity,
+      })),
+      stockChanges,
+    },
+    ...(outboxEventMetadata ?? {}),
+  } as const;
+
+  await outboxEventManager.createOne<ReservationReleasedPayload>(
+    releaseReservationOutboxEvent,
+  );
+
+  return releasedReservation;
 }
 
 async function buildReservationWithProducts({

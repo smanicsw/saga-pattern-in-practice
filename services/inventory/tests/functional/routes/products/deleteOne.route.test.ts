@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import { InventoryEventType } from "../../../../src/entities/inventory-event.entity.js";
 import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
 import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
@@ -52,6 +53,28 @@ describe("DELETE /products/:productId", () => {
 
       expect(productRows).toHaveLength(0);
       expect(stockRows).toHaveLength(0);
+
+      const outboxRows = await db("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: InventoryEventType.ProductDeleted,
+        event_version: 1,
+        action: "delete",
+        service: "inventory",
+        aggregate_type: "product",
+        aggregate_id: product.id,
+        correlation_id: null,
+        causation_id: null,
+        published_at: null,
+        dead_lettered_at: null,
+        status: "PENDING",
+        attempts: 0,
+        last_error: null,
+      });
+      expect(outboxRows[0].payload).toEqual({
+        previous: product,
+      });
     });
 
     it("should return no content if product does not exist", async () => {
@@ -61,6 +84,10 @@ describe("DELETE /products/:productId", () => {
 
       expect(deleteOneResponse.status).toEqual(204);
       expect(deleteOneResponse.body).toBeUndefined();
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 

@@ -6,6 +6,7 @@ import {
 } from "../../../constants/index.js";
 import { withTransaction } from "../../../infrastructure/adapters/database/index.js";
 import * as productManager from "../../../managers/product.manager.js";
+import getOutboxEventMetadata from "../../../tools/get-outbox-event-metadata.js";
 import * as productSchema from "../../schemas/products.schema.js";
 
 export function registerProductRoutes({
@@ -67,9 +68,13 @@ export function registerProductRoutes({
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { productId } = request.params;
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
 
         await productManager.deleteOne({
           productId,
+          outboxEventMetadata,
         });
       },
     }),
@@ -86,10 +91,14 @@ export function registerProductRoutes({
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { productId } = request.params;
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
 
         return productManager.updateOne({
           productId,
           updateProductInput: request.body,
+          outboxEventMetadata,
         });
       },
     }),
@@ -105,8 +114,13 @@ export function registerProductRoutes({
       status: 201,
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
+
         return productManager.createOne({
           createProductInput: request.body,
+          outboxEventMetadata,
         });
       },
     }),

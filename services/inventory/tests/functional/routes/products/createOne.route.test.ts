@@ -1,4 +1,5 @@
 import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
+import { InventoryEventType } from "../../../../src/entities/inventory-event.entity.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
 import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
 import type { Knex } from "knex";
@@ -24,6 +25,8 @@ describe("POST /products", () => {
 
   describe("Success", () => {
     it("should successfully create product", async () => {
+      const correlationId = "f07b8d0d-7fd4-4d91-91b7-8375903e6d1c";
+      const causationId = "a8b16c2d-874f-4dd6-bcdb-19058d15c802";
       const productToCreate = fixtures.products.createOne({
         product: {
           sku: "SKU-123",
@@ -37,6 +40,10 @@ describe("POST /products", () => {
           sku: productToCreate.sku,
           name: productToCreate.name,
           price: productToCreate.price,
+        },
+        headers: {
+          "x-correlation-id": correlationId,
+          "x-causation-id": causationId,
         },
       });
 
@@ -76,6 +83,28 @@ describe("POST /products", () => {
         product_id: response.body.data.id,
         available_quantity: 0,
         reserved_quantity: 0,
+      });
+
+      const outboxRows = await db("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: InventoryEventType.ProductCreated,
+        event_version: 1,
+        action: "create",
+        service: "inventory",
+        aggregate_type: "product",
+        aggregate_id: response.body.data.id,
+        correlation_id: correlationId,
+        causation_id: causationId,
+        published_at: null,
+        dead_lettered_at: null,
+        status: "PENDING",
+        attempts: 0,
+        last_error: null,
+      });
+      expect(outboxRows[0].payload).toEqual({
+        current: response.body.data,
       });
     });
 
@@ -131,6 +160,10 @@ describe("POST /products", () => {
       expect(productRows).toHaveLength(1);
       expect(stockRows).toHaveLength(1);
       expect(stockRows[0].product_id).toEqual(product.id);
+
+      const outboxRows = await db("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 

@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import { ISO_DATE_REGEX } from "../../../../src/constants/index.js";
+import { InventoryEventType } from "../../../../src/entities/inventory-event.entity.js";
+import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
 import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
 
@@ -126,6 +128,71 @@ describe("POST /reservations/:reservationId/release", () => {
       expect(firstStockResponse.body.data.reservedQuantity).toEqual(1);
       expect(secondStockResponse.body.data.availableQuantity).toEqual(5);
       expect(secondStockResponse.body.data.reservedQuantity).toEqual(0);
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: InventoryEventType.ReservationReleased,
+        event_version: 1,
+        action: "update",
+        service: "inventory",
+        aggregate_type: "reservation",
+        aggregate_id: reservation.id,
+        correlation_id: null,
+        causation_id: null,
+        published_at: null,
+        dead_lettered_at: null,
+        status: "PENDING",
+        attempts: 0,
+        last_error: null,
+      });
+      expect(outboxRows[0].payload).toEqual({
+        reservation: {
+          id: reservation.id,
+          orderId: reservation.orderId,
+          previous: {
+            status: "PENDING",
+          },
+          current: {
+            status: "RELEASED",
+          },
+        },
+        products: [
+          {
+            productId: products[0].id,
+            quantity: 2,
+          },
+          {
+            productId: products[1].id,
+            quantity: 3,
+          },
+        ],
+        stockChanges: [
+          {
+            productId: products[0].id,
+            previous: {
+              availableQuantity: 8,
+              reservedQuantity: 3,
+            },
+            current: {
+              availableQuantity: 10,
+              reservedQuantity: 1,
+            },
+          },
+          {
+            productId: products[1].id,
+            previous: {
+              availableQuantity: 2,
+              reservedQuantity: 3,
+            },
+            current: {
+              availableQuantity: 5,
+              reservedQuantity: 0,
+            },
+          },
+        ],
+      });
     });
 
     it("should be idempotent if reservation is already released", async () => {
@@ -183,6 +250,10 @@ describe("POST /reservations/:reservationId/release", () => {
 
       expect(stockResponse.body.data.availableQuantity).toEqual(10);
       expect(stockResponse.body.data.reservedQuantity).toEqual(0);
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 

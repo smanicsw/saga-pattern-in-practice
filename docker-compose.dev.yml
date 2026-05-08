@@ -49,3 +49,20 @@ services:
           sleep 2
         done
         corepack pnpm --filter @saga/inventory-service exec tsx watch src/index.ts
+
+  inventory-outbox-worker:
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./:/app
+    command:
+      - sh
+      - -c
+      - |
+        corepack pnpm --filter @saga/http-kit build
+        until corepack pnpm --filter @saga/inventory-service db:migrate:latest; do
+          echo "Waiting for inventory-db and retrying migrations..."
+          sleep 2
+        done
+        corepack pnpm --filter @saga/inventory-service outbox:worker

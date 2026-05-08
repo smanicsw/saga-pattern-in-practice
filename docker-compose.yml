@@ -71,6 +71,27 @@ services:
         done
         node dist/index.js
 
+  inventory-outbox-worker:
+    build:
+      context: .
+      args:
+        SERVICE: inventory
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${INVENTORY_DATABASE_URL}
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        until node_modules/.bin/knex migrate:latest --knexfile knexfile.cjs; do
+          echo "Waiting for inventory-db and retrying migrations..."
+          sleep 2
+        done
+        node dist/outbox/worker.js
+
   order-db:
     image: postgres:16-alpine
     environment:

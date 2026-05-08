@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import { ISO_DATE_REGEX } from "../../../../src/constants/index.js";
+import { InventoryEventType } from "../../../../src/entities/inventory-event.entity.js";
+import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
 import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
 
@@ -77,6 +79,36 @@ describe("PATCH /products/:productId", () => {
       }
 
       expect(findOneResponse.body.data).toEqual(updateOneResponse.body.data);
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: InventoryEventType.ProductUpdated,
+        event_version: 1,
+        action: "update",
+        service: "inventory",
+        aggregate_type: "product",
+        aggregate_id: product.id,
+        correlation_id: null,
+        causation_id: null,
+        published_at: null,
+        dead_lettered_at: null,
+        status: "PENDING",
+        attempts: 0,
+        last_error: null,
+      });
+      expect(outboxRows[0].payload).toEqual({
+        productId: product.id,
+        previous: {
+          name: "Keyboard",
+          price: 49.99,
+        },
+        current: {
+          name: "Wireless Keyboard",
+          price: 59.99,
+        },
+      });
     });
 
     it("should successfully clear product description", async () => {
@@ -149,6 +181,10 @@ describe("PATCH /products/:productId", () => {
         createdAt: product.createdAt,
         updatedAt: product.updatedAt,
       });
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 

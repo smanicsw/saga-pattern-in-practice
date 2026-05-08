@@ -1,4 +1,11 @@
 import type { ProductId } from "../entities/product.entity.js";
+import type { OutboxEventMetadata } from "../entities/outbox-event.entity.js";
+import {
+  InventoryEventType,
+  InventoryEventVersion,
+  StockQuantityChange,
+  StockUpdatedPayload,
+} from "../entities/inventory-event.entity.js";
 import type {
   ConfirmReservationStockInput,
   CreateStockInput,
@@ -13,6 +20,7 @@ import {
   StockNotFoundError,
 } from "../errors/errors.js";
 import * as stockRepository from "../repositories/stock.repository.js";
+import * as outboxEventManager from "./outbox-event.manager.js";
 
 export async function createOne({
   createStockInput,
@@ -53,9 +61,11 @@ export async function findOneByProductId({
 export async function updateOneByProductId({
   productId,
   updateStockInput,
+  outboxEventMetadata,
 }: {
   productId: ProductId;
   updateStockInput: UpdateStockInput;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Stock> {
   const currentStock = await stockRepository.findOneByProductId({
     productId,
@@ -80,6 +90,31 @@ export async function updateOneByProductId({
   if (!stock) {
     throw new StockNotFoundError();
   }
+
+  const updateStockOutboxEvent = {
+    type: InventoryEventType.StockUpdated,
+    version: InventoryEventVersion.StockUpdated,
+    action: "update",
+    aggregate: {
+      type: "stock",
+      id: stock.id,
+    },
+    payload: {
+      stockId: stock.id,
+      productId: stock.productId,
+      previous: {
+        availableQuantity: currentStock.availableQuantity,
+      },
+      current: {
+        availableQuantity: stock.availableQuantity,
+      },
+    },
+    ...(outboxEventMetadata ?? {}),
+  } as const;
+
+  await outboxEventManager.createOne<StockUpdatedPayload>(
+    updateStockOutboxEvent,
+  );
 
   return stock;
 }
@@ -127,7 +162,7 @@ export async function confirmReservation({
   confirmReservationStockInput,
 }: {
   confirmReservationStockInput: ConfirmReservationStockInput;
-}): Promise<void> {
+}): Promise<StockQuantityChange[]> {
   const productIds = confirmReservationStockInput.products.map(
     (product) => product.productId,
   );
@@ -152,23 +187,38 @@ export async function confirmReservation({
     }
 
     return {
-      productId: product.productId,
-      availableQuantity: stock.availableQuantity,
-      reservedQuantity: stock.reservedQuantity - product.quantity,
+      stockChange: {
+        productId: product.productId,
+        previous: {
+          availableQuantity: stock.availableQuantity,
+          reservedQuantity: stock.reservedQuantity,
+        },
+        current: {
+          availableQuantity: stock.availableQuantity,
+          reservedQuantity: stock.reservedQuantity - product.quantity,
+        },
+      },
+      stockUpdate: {
+        productId: product.productId,
+        availableQuantity: stock.availableQuantity,
+        reservedQuantity: stock.reservedQuantity - product.quantity,
+      },
     };
   });
 
   await stockRepository.updateManyForReservation({
-    products: stockUpdates,
+    products: stockUpdates.map((stockUpdate) => stockUpdate.stockUpdate),
     updatedAt: new Date().toISOString(),
   });
+
+  return stockUpdates.map((stockUpdate) => stockUpdate.stockChange);
 }
 
 export async function releaseReservation({
   releaseReservationStockInput,
 }: {
   releaseReservationStockInput: ReleaseReservationStockInput;
-}): Promise<void> {
+}): Promise<StockQuantityChange[]> {
   const productIds = releaseReservationStockInput.products.map(
     (product) => product.productId,
   );
@@ -193,14 +243,29 @@ export async function releaseReservation({
     }
 
     return {
-      productId: product.productId,
-      availableQuantity: stock.availableQuantity + product.quantity,
-      reservedQuantity: stock.reservedQuantity - product.quantity,
+      stockChange: {
+        productId: product.productId,
+        previous: {
+          availableQuantity: stock.availableQuantity,
+          reservedQuantity: stock.reservedQuantity,
+        },
+        current: {
+          availableQuantity: stock.availableQuantity + product.quantity,
+          reservedQuantity: stock.reservedQuantity - product.quantity,
+        },
+      },
+      stockUpdate: {
+        productId: product.productId,
+        availableQuantity: stock.availableQuantity + product.quantity,
+        reservedQuantity: stock.reservedQuantity - product.quantity,
+      },
     };
   });
 
   await stockRepository.updateManyForReservation({
-    products: stockUpdates,
+    products: stockUpdates.map((stockUpdate) => stockUpdate.stockUpdate),
     updatedAt: new Date().toISOString(),
   });
+
+  return stockUpdates.map((stockUpdate) => stockUpdate.stockChange);
 }

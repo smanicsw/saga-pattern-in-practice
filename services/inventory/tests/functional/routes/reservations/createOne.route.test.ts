@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { ISO_DATE_REGEX } from "../../../../src/constants/index.js";
+import { InventoryEventType } from "../../../../src/entities/inventory-event.entity.js";
 import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
 import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
@@ -117,6 +118,42 @@ describe("POST /reservations", () => {
       expect(firstStockResponse.body.data.reservedQuantity).toEqual(3);
       expect(secondStockResponse.body.data.availableQuantity).toEqual(2);
       expect(secondStockResponse.body.data.reservedQuantity).toEqual(3);
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: InventoryEventType.ReservationCreated,
+        event_version: 1,
+        action: "create",
+        service: "inventory",
+        aggregate_type: "reservation",
+        aggregate_id: createOneResponse.body.data.id,
+        correlation_id: null,
+        causation_id: null,
+        published_at: null,
+        dead_lettered_at: null,
+        status: "PENDING",
+        attempts: 0,
+        last_error: null,
+      });
+      expect(outboxRows[0].payload).toMatchObject({
+        current: {
+          id: createOneResponse.body.data.id,
+          orderId,
+          status: "PENDING",
+          products: [
+            expect.objectContaining({
+              productId: products[0].id,
+              quantity: 2,
+            }),
+            expect.objectContaining({
+              productId: products[1].id,
+              quantity: 3,
+            }),
+          ],
+        },
+      });
     });
 
     it("should aggregate duplicated products in one reservation", async () => {
@@ -251,6 +288,10 @@ describe("POST /reservations", () => {
 
       expect(stockResponse.body.data.availableQuantity).toEqual(10);
       expect(stockResponse.body.data.reservedQuantity).toEqual(0);
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 

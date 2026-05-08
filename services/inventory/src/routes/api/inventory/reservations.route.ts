@@ -3,6 +3,7 @@ import type { Router } from "express";
 
 import { withTransaction } from "../../../infrastructure/adapters/database/index.js";
 import * as reservationManager from "../../../managers/reservation.manager.js";
+import getOutboxEventMetadata from "../../../tools/get-outbox-event-metadata.js";
 import * as reservationSchema from "../../schemas/reservations.schema.js";
 
 export function registerReservationRoutes({
@@ -55,8 +56,13 @@ export function registerReservationRoutes({
       handler: async function ({ request }) {
         const { reservationId } = request.params;
 
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
+
         return reservationManager.confirmOne({
           reservationId,
+          outboxEventMetadata,
         });
       },
     }),
@@ -72,9 +78,14 @@ export function registerReservationRoutes({
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { reservationId } = request.params;
+        
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
 
         return reservationManager.releaseOne({
           reservationId,
+          outboxEventMetadata,
         });
       },
     }),
@@ -90,8 +101,13 @@ export function registerReservationRoutes({
       status: 201,
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
+
         return reservationManager.createOne({
           createReservationInput: request.body,
+          outboxEventMetadata,
         });
       },
     }),
