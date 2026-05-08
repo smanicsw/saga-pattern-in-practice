@@ -1,118 +1,49 @@
 # Saga Pattern in Practice
 
-Learning-focused microservices case study for orchestration-based sagas and the transactional outbox pattern.
+Learning-focused microservices project for orchestration-based sagas and the transactional outbox pattern.
 
-## Overview
+The repository is a pnpm workspace with three independent Node.js services:
 
-This repository is a pnpm workspace with three independent Node.js/TypeScript services:
+- `services/order`
+- `services/payments`
+- `services/inventory`
 
-- `order`
-- `payments`
-- `inventory`
+Each service owns its own API process, database, migrations, and tests. The Inventory service currently has the most complete API surface; see [services/inventory/README.md](services/inventory/README.md) for service-specific details.
 
-Each service currently exposes:
+## Stack
 
-- a health endpoint
-- a simple overview endpoint
-
-The codebase is organized so each service can evolve independently while still being run together during local development.
-
-## Architecture
-
-### High-level design
-
-- **Runtime:** Node.js + Express
-- **Language:** TypeScript (`module: NodeNext`, ESM)
-- **Validation:** TypeBox
-- **Logging:** pino + pino-http
-- **Monorepo/workspace:** pnpm workspaces
-- **Testing:** Jest + ts-jest (per service)
-- **Database:** PostgreSQL (one database per service)
-- **Query/migrations:** Knex + `pg`
-- **Containerization:** Docker multi-stage build + Docker Compose
-
-### Service structure
-
-Each service follows the same shape:
-
-- `src/index.ts`: process entrypoint (startup + graceful shutdown)
-- `src/app.ts`: Express app wiring (middleware + prefixed routes)
-- `src/routes/`: route registration and schemas
-- `src/managers/`: business logic layer
-- `src/repositories/`: data access abstraction
-- `src/infrastructure/adapters/`: adapters (logger, database)
-- `src/constants/`: service constants (for example `SERVICE_API_PREFIX`)
-- `tests/`: test folders (`unit`, `functional`, `apis`, `mocks`, `fixtures`, `utils`)
-
-### Route prefixing
-
-Every service mounts routes under a service-specific prefix:
-
-- Order: `/api/v1/order`
-- Payments: `/api/v1/payments`
-- Inventory: `/api/v1/inventory`
-
-So service route definitions like `router.get("/health", ...)` become `/api/v1/<service>/health` at runtime.
-
-### Database topology
-
-Each service has its own Postgres database:
-
-- Order service -> `order_db` (`order-db` container)
-- Payments service -> `payments_db` (`payments-db` container)
-- Inventory service -> `inventory_db` (`inventory-db` container)
-
-This keeps service data ownership isolated and aligns with microservice boundaries.
-
-## Services and Endpoints
-
-### Order service
-
-- Base URL: `http://localhost:3001`
-- Prefix: `/api/v1/order`
-- Endpoints:
-  - `GET /api/v1/order/health`
-  - `GET /api/v1/order/`
-
-### Payments service
-
-- Base URL: `http://localhost:3002`
-- Prefix: `/api/v1/payments`
-- Endpoints:
-  - `GET /api/v1/payments/health`
-  - `GET /api/v1/payments/`
-
-### Inventory service
-
-- Base URL: `http://localhost:3003`
-- Prefix: `/api/v1/inventory`
-- Endpoints:
-  - `GET /api/v1/inventory/health`
-  - `GET /api/v1/inventory/`
+- Node.js 22+
+- TypeScript, ESM, `module: NodeNext`
+- Express
+- TypeBox validation
+- pino logging
+- PostgreSQL, one database per service
+- Knex migrations and queries
+- Jest and ts-jest
+- Docker Compose for local infrastructure and containerized runtime
+- pnpm workspaces managed by Corepack
 
 ## Prerequisites
 
 - Node.js 22+
-- Corepack enabled (`corepack enable`)
-- pnpm (managed by Corepack)
-- Docker + Docker Compose (optional, for containerized workflow)
+- Corepack enabled
+- Docker and Docker Compose
 
-## Install Dependencies
+Enable Corepack once if needed:
 
-From repository root:
+```bash
+corepack enable
+```
+
+Install workspace dependencies from the repository root:
 
 ```bash
 corepack pnpm install
 ```
 
-## Environment Variables
+## Environment
 
-This project uses root-level env files for Docker and local setup:
-
-- `.env` (local secrets, ignored by git)
-- `.env.example` (safe template, committed)
-
-First-time setup:
+Copy the example env file before running Docker-based flows:
 
 ```bash
 cp .env.example .env
@@ -120,75 +51,23 @@ cp .env.example .env
 
 Important variables:
 
-- service ports: `ORDER_SERVICE_PORT`, `PAYMENT_SERVICE_PORT`, `INVENTORY_SERVICE_PORT`
-- service DB URLs: `ORDER_DATABASE_URL`, `PAYMENT_DATABASE_URL`, `INVENTORY_DATABASE_URL`
-- DB credentials: `*_DB_USER`, `*_DB_PASSWORD`, `*_DB_NAME`
-- exposed DB ports: `ORDER_DB_HOST_PORT`, `PAYMENTS_DB_HOST_PORT`, `INVENTORY_DB_HOST_PORT`
+- `ORDER_SERVICE_PORT`, `PAYMENT_SERVICE_PORT`, `INVENTORY_SERVICE_PORT`
+- `ORDER_DATABASE_URL`, `PAYMENT_DATABASE_URL`, `INVENTORY_DATABASE_URL`
+- `ORDER_DB_HOST_PORT`, `PAYMENTS_DB_HOST_PORT`, `INVENTORY_DB_HOST_PORT`
+- `ORDER_TEST_DATABASE_URL`, `PAYMENTS_TEST_DATABASE_URL`, `INVENTORY_TEST_DATABASE_URL`
+- `ORDER_TEST_DB_HOST_PORT`, `PAYMENTS_TEST_DB_HOST_PORT`, `INVENTORY_TEST_DB_HOST_PORT`
 
-Local vs Docker behavior:
+Docker Compose reads `.env` automatically. Local non-Docker commands do not load `.env` by themselves, so export the needed environment variables in your shell or use an env loader.
 
-- Docker Compose automatically reads root `.env`.
-- Local `pnpm dev:*` does not automatically load `.env`; export vars in your shell or use an env loader.
+## Service Ports
 
-## Run the App
+| Service   | Default URL             | API prefix          |
+| --------- | ----------------------- | ------------------- |
+| Order     | `http://localhost:3001` | `/api/v1/order`     |
+| Payments  | `http://localhost:3002` | `/api/v1/payments`  |
+| Inventory | `http://localhost:3003` | `/api/v1/inventory` |
 
-Migration strategy:
-
-- Docker flow: migrations are auto-run at service startup.
-- Local non-Docker flow: run migrations manually before starting services.
-
-### Option 1: Local development (one terminal per service)
-
-```bash
-corepack pnpm dev:order
-corepack pnpm dev:payments
-corepack pnpm dev:inventory
-```
-
-### Option 2: Run all services with Docker (single command)
-
-```bash
-corepack pnpm docker:up
-```
-
-Stop all containers:
-
-```bash
-corepack pnpm docker:down
-```
-
-View container logs:
-
-```bash
-corepack pnpm docker:logs
-```
-
-Database containers are started in the same compose project, and each service gets its `DATABASE_URL` from `.env`.
-Each service container runs `knex migrate:latest` before starting the app process.
-
-### Option 3: Run all services with Docker + hot reload (dev mode)
-
-```bash
-corepack pnpm docker:dev
-```
-
-This runs all three services in watch mode (`tsx watch`) with source bind-mounted into containers.
-
-Stop dev stack:
-
-```bash
-corepack pnpm docker:dev:down
-```
-
-View dev logs:
-
-```bash
-corepack pnpm docker:dev:logs
-```
-
-## Verify the App
-
-Run quick health checks:
+Health checks:
 
 ```bash
 curl http://localhost:3001/api/v1/order/health
@@ -196,29 +75,96 @@ curl http://localhost:3002/api/v1/payments/health
 curl http://localhost:3003/api/v1/inventory/health
 ```
 
-Try overview endpoints:
+## Run Everything With Docker
+
+Build and start all services, databases, and the Inventory outbox worker:
 
 ```bash
-curl http://localhost:3001/api/v1/order/
-curl http://localhost:3002/api/v1/payments/
-curl http://localhost:3003/api/v1/inventory/
+corepack pnpm docker:up
 ```
 
-## Build, Typecheck, Lint
+Stop the stack:
 
-From root:
+```bash
+corepack pnpm docker:down
+```
+
+Follow logs:
+
+```bash
+corepack pnpm docker:logs
+```
+
+In the normal Docker flow, each service container waits for its database and runs `knex migrate:latest` before starting the compiled service process.
+
+## Run Everything With Docker Hot Reload
+
+Start all services in watch mode with source mounted into the containers:
+
+```bash
+corepack pnpm docker:dev
+```
+
+Stop the dev stack:
+
+```bash
+corepack pnpm docker:dev:down
+```
+
+Follow dev logs:
+
+```bash
+corepack pnpm docker:dev:logs
+```
+
+In dev mode, service containers run migrations and then start with `tsx watch`. The Inventory outbox worker runs as a separate process with `corepack pnpm --filter @saga/inventory-service outbox:worker`.
+
+## Run One Service Locally
+
+Start the service's database first. For example, Inventory:
+
+```bash
+docker compose up -d inventory-db
+```
+
+Export a host-reachable `DATABASE_URL`, run migrations, and start the service:
+
+```bash
+export DATABASE_URL=postgresql://postgres:change_me_inventory@localhost:5435/inventory_db
+corepack pnpm --filter @saga/inventory-service db:migrate:latest
+corepack pnpm dev:inventory
+```
+
+Equivalent root scripts exist for each API service:
+
+```bash
+corepack pnpm dev:order
+corepack pnpm dev:payments
+corepack pnpm dev:inventory
+```
+
+When running locally, start one terminal per service. Each service expects its own `DATABASE_URL` to point to that service's database.
+
+## Build And Static Checks
+
+From the repository root:
 
 ```bash
 corepack pnpm build
 corepack pnpm typecheck
 corepack pnpm lint
+corepack pnpm format:check
 ```
 
-These run recursively across all services.
+Format files:
 
-## Database Migrations (Knex)
+```bash
+corepack pnpm format
+```
 
-Each service has its own `knexfile.cjs` and migration folder:
+## Database Migrations
+
+Each service has its own `knexfile.cjs` and migration directory:
 
 - `services/order/src/infrastructure/adapters/database/migrations`
 - `services/payments/src/infrastructure/adapters/database/migrations`
@@ -227,9 +173,9 @@ Each service has its own `knexfile.cjs` and migration folder:
 Create a migration:
 
 ```bash
-corepack pnpm --filter @saga/order-service db:migrate:make create_orders_table
-corepack pnpm --filter @saga/payments-service db:migrate:make create_payments_table
-corepack pnpm --filter @saga/inventory-service db:migrate:make create_inventory_items_table
+corepack pnpm --filter @saga/order-service db:migrate:make migration_name
+corepack pnpm --filter @saga/payments-service db:migrate:make migration_name
+corepack pnpm --filter @saga/inventory-service db:migrate:make migration_name
 ```
 
 Apply migrations:
@@ -240,92 +186,83 @@ corepack pnpm --filter @saga/payments-service db:migrate:latest
 corepack pnpm --filter @saga/inventory-service db:migrate:latest
 ```
 
-Recommended startup order:
-
-1. Docker flow: run `corepack pnpm docker:up` (migrations run automatically).
-2. Local flow: start Postgres, run `db:migrate:latest` per service, then start services.
+For local migration commands, make sure `DATABASE_URL` points to the correct service database.
 
 ## Testing
 
-### Run all tests
+Start all test databases:
 
 ```bash
-corepack pnpm -r test
+corepack pnpm test:up
 ```
 
-### Run tests for one service
+Start one service test database:
 
 ```bash
-corepack pnpm --filter @saga/order-service test
-corepack pnpm --filter @saga/payments-service test
-corepack pnpm --filter @saga/inventory-service test
+corepack pnpm test:up -- inventory
+corepack pnpm test:up -- order
+corepack pnpm test:up -- payments
 ```
 
-### Test folder layout per service
+Run all service tests:
 
-- `tests/unit`: unit tests
-- `tests/functional`: functional tests
-- `tests/apis`: endpoint/API tests
-- `tests/mocks`: test doubles and mock adapters
-- `tests/fixtures`: static test data
-- `tests/utils`: test helper functions
+```bash
+corepack pnpm test
+```
 
-## Docker Notes
+Run one service's tests:
 
-- The Dockerfile uses a **multi-stage build**:
-  - deps stage installs workspace dependencies
-  - build stage compiles selected service and deploys production bundle
-  - runtime stage contains only the deployed service output
-- `docker-compose.yml` also starts three dedicated Postgres containers and named volumes.
-- Service containers use env-driven `DATABASE_URL` values from root `.env`.
-- `docker-compose.yml` builds three images with build args:
-  - `SERVICE=order`
-  - `SERVICE=payments`
-  - `SERVICE=inventory`
-- `docker-compose.dev.yml` overrides service commands to run migrations + `tsx watch` for hot reload.
+```bash
+corepack pnpm test -- inventory
+corepack pnpm test -- order
+corepack pnpm test -- payments
+```
 
-## Graceful Shutdown Behavior
+Run only functional tests:
 
-Each service entrypoint handles:
+```bash
+corepack pnpm test:functional
+corepack pnpm test:functional -- inventory
+```
 
-- `SIGINT` (Ctrl+C)
-- `SIGTERM` (container/platform stop)
-- `unhandledRejection`
+Stop test databases:
 
-On shutdown, the service logs, stops accepting new connections, disconnects database adapter, and exits cleanly.
+```bash
+corepack pnpm test:down
+corepack pnpm test:down -- inventory
+```
 
-## Database Readiness
+The test runner starts host-side Jest processes and uses the test database URLs from `.env.example` defaults or your environment.
 
-At startup, each service:
+## Common Service Shape
 
-- creates a Knex Postgres client from `DATABASE_URL`
-- runs a connectivity probe (`select 1`)
-- starts listening only after the DB check succeeds
+Each service follows the same broad structure:
 
-If DB connection fails, startup logs a fatal error and exits with status code `1`.
+```txt
+src/index.ts                  process entrypoint
+src/app.ts                    Express app wiring
+src/routes                    route registration and schemas
+src/managers                  business logic
+src/repositories              database access
+src/infrastructure/adapters   database, logger, and other adapters
+src/constants                 service constants
+tests                         unit, functional, API helpers, fixtures, utilities
+```
 
-## Workspace Commands Reference
+Every service:
 
-From root `package.json`:
+- exposes routes under a service-specific `/api/v1/<service>` prefix
+- validates request bodies, route params, query params, and responses with TypeBox
+- wraps successful non-204 responses as `{ "success": true, "data": ... }`
+- wraps errors as `{ "success": false, "error": "<code>" }`
+- owns a separate PostgreSQL database
+- runs migrations before startup in Docker flows
+- handles graceful shutdown for `SIGINT`, `SIGTERM`, and unhandled startup failures
 
-- `corepack pnpm dev:order`
-- `corepack pnpm dev:payments`
-- `corepack pnpm dev:inventory`
-- `corepack pnpm docker:up`
-- `corepack pnpm docker:down`
-- `corepack pnpm docker:logs`
-- `corepack pnpm docker:dev`
-- `corepack pnpm docker:dev:down`
-- `corepack pnpm docker:dev:logs`
-- `corepack pnpm build`
-- `corepack pnpm typecheck`
-- `corepack pnpm lint`
+## Additional Documentation
 
-## Current Scope and Next Steps
-
-Current implementation is intentionally minimal and designed as a foundation for:
-
-- saga orchestration flows
-- transactional outbox implementation
-- service-to-service communication
-- richer API contracts and persistence
+- [Inventory service README](services/inventory/README.md)
+- [Saga goal and flows](docs/orchestration-saga-goal-and-flows.md)
+- [Outbox implementation plan](docs/outbox-pattern-implementation-plan.md)
+- [Backend development guidelines](docs/backend-development-guidelines.md)
+- [Backend testing guidelines](docs/backend-testing-guidelines.md)
