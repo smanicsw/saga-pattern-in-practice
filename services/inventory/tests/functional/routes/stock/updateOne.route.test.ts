@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 import { ISO_DATE_REGEX } from "../../../../src/constants/index.js";
+import { InventoryEventType } from "../../../../src/entities/inventory-event.entity.js";
+import { getDatabase } from "../../../../src/infrastructure/adapters/database/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
 import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
 
@@ -74,6 +76,35 @@ describe("PATCH /stock/:productId", () => {
       }
 
       expect(findOneResponse.body.data).toEqual(updateOneResponse.body.data);
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: InventoryEventType.StockUpdated,
+        event_version: 1,
+        action: "update",
+        service: "inventory",
+        aggregate_type: "stock",
+        aggregate_id: stock.id,
+        correlation_id: null,
+        causation_id: null,
+        published_at: null,
+        dead_lettered_at: null,
+        status: "PENDING",
+        attempts: 0,
+        last_error: null,
+      });
+      expect(outboxRows[0].payload).toEqual({
+        stockId: stock.id,
+        productId: product.id,
+        previous: {
+          availableQuantity: 10,
+        },
+        current: {
+          availableQuantity: 25,
+        },
+      });
     });
 
     it("should return the current stock without updating if payload does not change it", async () => {
@@ -114,6 +145,10 @@ describe("PATCH /stock/:productId", () => {
         createdAt: stock.createdAt,
         updatedAt: stock.updatedAt,
       });
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 
