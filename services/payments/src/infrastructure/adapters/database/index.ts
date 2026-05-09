@@ -13,6 +13,10 @@ export function getDatabase(): Knex {
   return db;
 }
 
+export function getQueryBuilder(): Knex {
+  return getDatabase();
+}
+
 export async function connectDatabase() {
   if (db) {
     return;
