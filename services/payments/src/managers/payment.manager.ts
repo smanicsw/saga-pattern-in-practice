@@ -32,3 +32,19 @@ export async function findOne({
 
   return payment;
 }
+
+export async function findOneByOrderId({
+  orderId,
+}: {
+  orderId: string;
+}): Promise<Payment> {
+  const payment = await paymentRepository.findOneByOrderId({
+    orderId,
+  });
+
+  if (!payment) {
+    throw new PaymentNotFoundError();
+  }
+
+  return payment;
+}

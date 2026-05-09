@@ -48,6 +48,20 @@ export const FindOnePaymentResponse = PaymentResponse;
 
 export type FindOnePaymentResponse = Static<typeof FindOnePaymentResponse>;
 
+export const FindOnePaymentByOrderIdParams = Type.Object({
+  orderId: Type.String({ format: "uuid" }),
+});
+
+export type FindOnePaymentByOrderIdParams = Static<
+  typeof FindOnePaymentByOrderIdParams
+>;
+
+export const FindOnePaymentByOrderIdResponse = PaymentResponse;
+
+export type FindOnePaymentByOrderIdResponse = Static<
+  typeof FindOnePaymentByOrderIdResponse
+>;
+
 export const FindManyPaymentsQuery = Type.Object({
   orderId: Type.Optional(Type.String({ format: "uuid" })),
   status: Type.Optional(PaymentStatus),

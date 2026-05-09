@@ -92,6 +92,37 @@ export async function findOne({
   return transformFromRow({ paymentRow });
 }
 
+export async function findOneByOrderId({
+  orderId,
+}: {
+  orderId: string;
+}): Promise<Payment | null> {
+  const db = getQueryBuilder();
+
+  const paymentRow = await db<PaymentRow>("payments")
+    .select([
+      "id",
+      "order_id",
+      "amount",
+      "currency",
+      "status",
+      "provider_ref",
+      "failure_reason",
+      "created_at",
+      "updated_at",
+    ])
+    .where("order_id", orderId)
+    .orderBy("created_at", "asc")
+    .orderBy("id", "asc")
+    .first();
+
+  if (!paymentRow) {
+    return null;
+  }
+
+  return transformFromRow({ paymentRow });
+}
+
 function transformFromRow({ paymentRow }: { paymentRow: PaymentRow }): Payment {
   return {
     id: paymentRow.id,

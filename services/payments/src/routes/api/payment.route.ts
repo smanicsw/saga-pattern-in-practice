@@ -39,6 +39,23 @@ export function registerPaymentRoutes({ router }: { router: Router }) {
   );
 
   router.get(
+    "/by-order/:orderId",
+    defineRoute({
+      schemas: {
+        params: paymentSchema.FindOnePaymentByOrderIdParams,
+        response: paymentSchema.FindOnePaymentByOrderIdResponse,
+      },
+      handler: async function ({ request }) {
+        const { orderId } = request.params;
+
+        return paymentManager.findOneByOrderId({
+          orderId,
+        });
+      },
+    }),
+  );
+
+  router.get(
     "/:paymentId",
     defineRoute({
       schemas: {

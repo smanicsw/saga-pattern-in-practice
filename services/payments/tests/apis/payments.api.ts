@@ -66,3 +66,25 @@ export async function findOne({
     body: (await response.json()) as ApiResponse<Payment>["body"],
   };
 }
+
+export async function findOneByOrderId({
+  orderId,
+  headers,
+}: ApiRequestOptions & {
+  orderId: string;
+}): Promise<ApiResponse<Payment>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/by-order/${orderId}`,
+    {
+      method: "GET",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Payment>["body"],
+  };
+}

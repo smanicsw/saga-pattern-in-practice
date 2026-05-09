@@ -1,6 +1,8 @@
 export { healthResponseSchema } from "./health.schema.js";
 export type { HealthResponse } from "./health.schema.js";
 export {
+  FindOnePaymentByOrderIdParams,
+  FindOnePaymentByOrderIdResponse,
   FindOnePaymentParams,
   FindOnePaymentResponse,
   FindManyPaymentsQuery,
