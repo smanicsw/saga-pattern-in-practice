@@ -1,9 +1,13 @@
 import type {
   FindManyPaymentsQuery,
+  NewPayment,
+  NewPaymentRow,
   Payment,
   PaymentId,
   PaymentList,
   PaymentRow,
+  UpdatePayment,
+  UpdatePaymentRow,
 } from "../entities/payment.entity.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 import toStringValue from "../tools/to-string-value.js";
@@ -61,6 +65,32 @@ export async function findMany({
       nextCursor,
     },
   };
+}
+
+export async function createOne({
+  newPayment,
+}: {
+  newPayment: NewPayment;
+}): Promise<Payment> {
+  const db = getQueryBuilder();
+
+  const paymentRowToCreate = transformToRow({ newPayment });
+
+  const [createdPaymentRow] = await db<PaymentRow>("payments")
+    .insert(paymentRowToCreate)
+    .returning([
+      "id",
+      "order_id",
+      "amount",
+      "currency",
+      "status",
+      "provider_ref",
+      "failure_reason",
+      "created_at",
+      "updated_at",
+    ]);
+
+  return transformFromRow({ paymentRow: createdPaymentRow });
 }
 
 export async function findOne({
@@ -121,6 +151,75 @@ export async function findOneByOrderId({
   }
 
   return transformFromRow({ paymentRow });
+}
+
+export async function updateOne({
+  paymentId,
+  updatePayment,
+}: {
+  paymentId: PaymentId;
+  updatePayment: UpdatePayment;
+}): Promise<Payment | null> {
+  const db = getQueryBuilder();
+
+  const paymentRowToUpdate = transformUpdateToRow({ updatePayment });
+
+  const [updatedPaymentRow] = await db<PaymentRow>("payments")
+    .where("id", paymentId)
+    .update(paymentRowToUpdate)
+    .returning([
+      "id",
+      "order_id",
+      "amount",
+      "currency",
+      "status",
+      "provider_ref",
+      "failure_reason",
+      "created_at",
+      "updated_at",
+    ]);
+
+  if (!updatedPaymentRow) {
+    return null;
+  }
+
+  return transformFromRow({ paymentRow: updatedPaymentRow });
+}
+
+function transformToRow({
+  newPayment,
+}: {
+  newPayment: NewPayment;
+}): NewPaymentRow {
+  return {
+    order_id: newPayment.orderId,
+    amount: String(newPayment.amount),
+    currency: newPayment.currency,
+    status: newPayment.status,
+    provider_ref: newPayment.providerRef,
+    failure_reason: newPayment.failureReason,
+    created_at: newPayment.createdAt,
+    updated_at: newPayment.updatedAt,
+  };
+}
+
+function transformUpdateToRow({
+  updatePayment,
+}: {
+  updatePayment: UpdatePayment;
+}): UpdatePaymentRow {
+  return {
+    ...(updatePayment.status !== undefined
+      ? { status: updatePayment.status }
+      : {}),
+    ...(updatePayment.providerRef !== undefined
+      ? { provider_ref: updatePayment.providerRef }
+      : {}),
+    ...(updatePayment.failureReason !== undefined
+      ? { failure_reason: updatePayment.failureReason }
+      : {}),
+    updated_at: updatePayment.updatedAt,
+  };
 }
 
 function transformFromRow({ paymentRow }: { paymentRow: PaymentRow }): Payment {

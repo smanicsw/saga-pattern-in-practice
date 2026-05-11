@@ -9,6 +9,21 @@ import { paymentManager } from "../../managers/index.js";
 import * as paymentSchema from "../schemas/payment.schema.js";
 
 export function registerPaymentRoutes({ router }: { router: Router }) {
+  router.post(
+    "/authorize",
+    defineRoute({
+      schemas: {
+        body: paymentSchema.AuthorizePaymentBody,
+        response: paymentSchema.AuthorizePaymentResponse,
+      },
+      handler: async function ({ request }) {
+        return paymentManager.authorize({
+          authorizePaymentInput: request.body,
+        });
+      },
+    }),
+  );
+
   router.get(
     "/",
     defineRoute({

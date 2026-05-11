@@ -15,6 +15,13 @@ export type Payment = {
   updatedAt: string;
 };
 
+export type AuthorizePaymentInput = {
+  orderId: string;
+  amount: number;
+  currency: string;
+  paymentMethodToken?: string;
+};
+
 export type PaymentRow = {
   id: PaymentId;
   order_id: string;
@@ -26,6 +33,20 @@ export type PaymentRow = {
   created_at: string;
   updated_at: string;
 };
+
+export type NewPayment = Omit<Payment, "id">;
+
+export type NewPaymentRow = Omit<PaymentRow, "id">;
+
+export type UpdatePayment = Partial<
+  Pick<Payment, "status" | "providerRef" | "failureReason">
+> & {
+  updatedAt: string;
+};
+
+export type UpdatePaymentRow = Partial<
+  Pick<PaymentRow, "status" | "provider_ref" | "failure_reason" | "updated_at">
+>;
 
 export type PaymentList = {
   items: Payment[];

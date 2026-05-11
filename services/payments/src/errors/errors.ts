@@ -9,3 +9,15 @@ export class PaymentNotFoundError extends HttpError {
     });
   }
 }
+
+export class PaymentConflictError extends HttpError {
+  constructor({
+    message = "Payment request conflicts with an existing payment.",
+  } = {}) {
+    super({
+      status: 409,
+      code: "payment_conflict",
+      message,
+    });
+  }
+}

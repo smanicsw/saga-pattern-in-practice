@@ -98,7 +98,6 @@ describe("GET /api/v1/payments", () => {
             status: "AUTHORIZED",
           },
           {
-            orderId,
             status: "FAILED",
           },
           {

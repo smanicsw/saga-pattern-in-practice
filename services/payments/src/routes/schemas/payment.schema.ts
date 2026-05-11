@@ -62,6 +62,26 @@ export type FindOnePaymentByOrderIdResponse = Static<
   typeof FindOnePaymentByOrderIdResponse
 >;
 
+export const AuthorizePaymentBody = Type.Object(
+  {
+    orderId: Type.String({ format: "uuid" }),
+    amount: Type.Number({ minimum: 0.01 }),
+    currency: Type.String({ minLength: 3, maxLength: 3 }),
+    paymentMethodToken: Type.Optional(
+      Type.String({ minLength: 1, maxLength: 255 }),
+    ),
+  },
+  {
+    additionalProperties: false,
+  },
+);
+
+export type AuthorizePaymentBody = Static<typeof AuthorizePaymentBody>;
+
+export const AuthorizePaymentResponse = PaymentResponse;
+
+export type AuthorizePaymentResponse = Static<typeof AuthorizePaymentResponse>;
+
 export const FindManyPaymentsQuery = Type.Object({
   orderId: Type.Optional(Type.String({ format: "uuid" })),
   status: Type.Optional(PaymentStatus),

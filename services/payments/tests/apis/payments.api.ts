@@ -24,6 +24,29 @@ type ApiRequestOptions = {
   headers?: Record<string, string>;
 };
 
+export async function authorize({
+  body,
+  headers,
+}: ApiRequestOptions & {
+  body: unknown;
+}): Promise<ApiResponse<Payment>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(`${baseUrl}${SERVICE_API_PREFIX}/authorize`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(body),
+  });
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Payment>["body"],
+  };
+}
+
 export async function findMany({
   query,
   headers,
