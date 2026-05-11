@@ -16,6 +16,12 @@ export type AuthorizePaymentProviderResult =
       failureReason: Record<string, unknown>;
     };
 
+export type RefundPaymentProviderInput = {
+  paymentId: string;
+  providerRef: string | null;
+  reason?: string;
+};
+
 const DECLINE_TOKENS = new Set([
   "card_declined",
   "fail",
@@ -43,4 +49,10 @@ export async function authorizePayment({
     approved: true,
     providerRef: `fake-auth-${paymentId}`,
   };
+}
+
+export async function refundPayment(
+  _input: RefundPaymentProviderInput,
+): Promise<void> {
+  return;
 }

@@ -22,6 +22,10 @@ export type AuthorizePaymentInput = {
   paymentMethodToken?: string;
 };
 
+export type RefundPaymentInput = {
+  reason?: string;
+};
+
 export type PaymentRow = {
   id: PaymentId;
   order_id: string;

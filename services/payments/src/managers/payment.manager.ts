@@ -4,8 +4,10 @@ import type {
   Payment,
   PaymentId,
   PaymentList,
+  RefundPaymentInput,
 } from "../entities/payment.entity.js";
 import {
+  InvalidPaymentStatusError,
   PaymentConflictError,
   PaymentNotFoundError,
 } from "../errors/errors.js";
@@ -112,6 +114,80 @@ export async function authorize({
       }
 
       return updatedPayment;
+    },
+  });
+}
+
+export async function refund({
+  paymentId,
+  refundPaymentInput,
+}: {
+  paymentId: PaymentId;
+  refundPaymentInput: RefundPaymentInput;
+}): Promise<Payment> {
+  const payment = await withTransaction({
+    operation: async () => {
+      const currentPayment = await paymentRepository.findOneForUpdate({
+        paymentId,
+      });
+
+      if (!currentPayment) {
+        throw new PaymentNotFoundError();
+      }
+
+      if (currentPayment.status === "REFUNDED") {
+        return currentPayment;
+      }
+
+      if (currentPayment.status !== "AUTHORIZED") {
+        throw new InvalidPaymentStatusError();
+      }
+
+      return currentPayment;
+    },
+  });
+
+  if (payment.status === "REFUNDED") {
+    return payment;
+  }
+
+  await fakePaymentProvider.refundPayment({
+    paymentId: payment.id,
+    providerRef: payment.providerRef,
+    reason: refundPaymentInput.reason,
+  });
+
+  return withTransaction({
+    operation: async () => {
+      const currentPayment = await paymentRepository.findOneForUpdate({
+        paymentId,
+      });
+
+      if (!currentPayment) {
+        throw new PaymentNotFoundError();
+      }
+
+      if (currentPayment.status === "REFUNDED") {
+        return currentPayment;
+      }
+
+      if (currentPayment.status !== "AUTHORIZED") {
+        throw new InvalidPaymentStatusError();
+      }
+
+      const refundedPayment = await paymentRepository.updateOne({
+        paymentId,
+        updatePayment: {
+          status: "REFUNDED",
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+      if (!refundedPayment) {
+        throw new PaymentNotFoundError();
+      }
+
+      return refundedPayment;
     },
   });
 }

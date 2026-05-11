@@ -82,6 +82,27 @@ export const AuthorizePaymentResponse = PaymentResponse;
 
 export type AuthorizePaymentResponse = Static<typeof AuthorizePaymentResponse>;
 
+export const RefundPaymentParams = Type.Object({
+  paymentId: Type.String({ format: "uuid" }),
+});
+
+export type RefundPaymentParams = Static<typeof RefundPaymentParams>;
+
+export const RefundPaymentBody = Type.Object(
+  {
+    reason: Type.Optional(Type.String({ minLength: 1, maxLength: 255 })),
+  },
+  {
+    additionalProperties: false,
+  },
+);
+
+export type RefundPaymentBody = Static<typeof RefundPaymentBody>;
+
+export const RefundPaymentResponse = PaymentResponse;
+
+export type RefundPaymentResponse = Static<typeof RefundPaymentResponse>;
+
 export const FindManyPaymentsQuery = Type.Object({
   orderId: Type.Optional(Type.String({ format: "uuid" })),
   status: Type.Optional(PaymentStatus),

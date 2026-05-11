@@ -24,6 +24,25 @@ export function registerPaymentRoutes({ router }: { router: Router }) {
     }),
   );
 
+  router.post(
+    "/:paymentId/refund",
+    defineRoute({
+      schemas: {
+        params: paymentSchema.RefundPaymentParams,
+        body: paymentSchema.RefundPaymentBody,
+        response: paymentSchema.RefundPaymentResponse,
+      },
+      handler: async function ({ request }) {
+        const { paymentId } = request.params;
+
+        return paymentManager.refund({
+          paymentId,
+          refundPaymentInput: request.body,
+        });
+      },
+    }),
+  );
+
   router.get(
     "/",
     defineRoute({

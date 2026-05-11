@@ -21,3 +21,13 @@ export class PaymentConflictError extends HttpError {
     });
   }
 }
+
+export class InvalidPaymentStatusError extends HttpError {
+  constructor() {
+    super({
+      status: 409,
+      code: "invalid_payment_status",
+      message: "Invalid payment status transition.",
+    });
+  }
+}

@@ -122,6 +122,36 @@ export async function findOne({
   return transformFromRow({ paymentRow });
 }
 
+export async function findOneForUpdate({
+  paymentId,
+}: {
+  paymentId: PaymentId;
+}): Promise<Payment | null> {
+  const db = getQueryBuilder();
+
+  const paymentRow = await db<PaymentRow>("payments")
+    .select([
+      "id",
+      "order_id",
+      "amount",
+      "currency",
+      "status",
+      "provider_ref",
+      "failure_reason",
+      "created_at",
+      "updated_at",
+    ])
+    .where("id", paymentId)
+    .forUpdate()
+    .first();
+
+  if (!paymentRow) {
+    return null;
+  }
+
+  return transformFromRow({ paymentRow });
+}
+
 export async function findOneByOrderId({
   orderId,
 }: {
