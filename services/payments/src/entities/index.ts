@@ -1,4 +1,31 @@
 export type {
+  MarkOutboxEventAsFailed,
+  MarkOutboxEventAsFailedRow,
+  MarkOutboxEventAsPublished,
+  MarkOutboxEventAsPublishedRow,
+  NewOutboxEvent,
+  NewOutboxEventRow,
+  OutboxEvent,
+  OutboxEventAction,
+  OutboxEventAggregate,
+  OutboxEventId,
+  OutboxEventMetadata,
+  OutboxEventRow,
+  OutboxEventService,
+  OutboxEventStatus,
+} from "./outbox-event.entity.js";
+export {
+  PaymentEventType,
+  PaymentEventVersion,
+} from "./payment-event.entity.js";
+export type {
+  PaymentAuthorizationRequestedPayload,
+  PaymentAuthorizedPayload,
+  PaymentEventPayloadByType,
+  PaymentFailedPayload,
+  PaymentRefundedPayload,
+} from "./payment-event.entity.js";
+export type {
   CursorPagination,
   CursorPaginationQuery,
 } from "./pagination.entity.js";

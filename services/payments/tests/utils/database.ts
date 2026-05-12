@@ -39,6 +39,7 @@ export async function cleanTestDatabase() {
 
   await db.raw(`
     truncate table
+      outbox_events,
       payments
     restart identity cascade
   `);
