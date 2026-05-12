@@ -36,6 +36,16 @@ export const OrderResponse = Type.Object({
 
 export type OrderResponse = Static<typeof OrderResponse>;
 
+export const FindOneOrderParams = Type.Object({
+  orderId: Type.String({ format: "uuid" }),
+});
+
+export type FindOneOrderParams = Static<typeof FindOneOrderParams>;
+
+export const FindOneOrderResponse = OrderResponse;
+
+export type FindOneOrderResponse = Static<typeof FindOneOrderResponse>;
+
 export const FindManyOrdersQuery = Type.Object({
   status: Type.Optional(OrderStatus),
   customerId: Type.Optional(Type.String({ minLength: 1, maxLength: 120 })),

@@ -1,5 +1,5 @@
 import { SERVICE_API_PREFIX } from "../../src/constants/index.js";
-import type { OrderList } from "../../src/entities/index.js";
+import type { Order, OrderList } from "../../src/entities/index.js";
 import { getBaseUrl } from "./client.js";
 
 type ApiSuccessResponse<TData> = {
@@ -42,5 +42,24 @@ export async function findMany({
   return {
     status: response.status,
     body: (await response.json()) as ApiResponse<OrderList>["body"],
+  };
+}
+
+export async function findOne({
+  orderId,
+  headers,
+}: ApiRequestOptions & {
+  orderId: string;
+}): Promise<ApiResponse<Order>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(`${baseUrl}${SERVICE_API_PREFIX}/orders/${orderId}`, {
+    method: "GET",
+    headers,
+  });
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Order>["body"],
   };
 }

@@ -37,4 +37,21 @@ export function registerOrderRoutes({ router }: { router: Router }) {
       },
     }),
   );
+
+  router.get(
+    "/orders/:orderId",
+    defineRoute({
+      schemas: {
+        params: orderSchema.FindOneOrderParams,
+        response: orderSchema.FindOneOrderResponse,
+      },
+      handler: async function ({ request }) {
+        const { orderId } = request.params;
+
+        return orderManager.findOne({
+          orderId,
+        });
+      },
+    }),
+  );
 }

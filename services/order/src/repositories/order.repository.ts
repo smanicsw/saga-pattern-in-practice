@@ -1,6 +1,7 @@
 import type {
   FindManyOrdersQuery,
   Order,
+  OrderId,
   OrderItem,
   OrderItemRow,
   OrderList,
@@ -71,6 +72,40 @@ export async function findMany({
   };
 }
 
+export async function findOne({
+  orderId,
+}: {
+  orderId: OrderId;
+}): Promise<Order | null> {
+  const db = getDatabase();
+
+  const orderRow = await db<OrderRow>("orders")
+    .select([
+      "id",
+      "customer_id",
+      "status",
+      "total_amount",
+      "currency",
+      "created_at",
+      "updated_at",
+    ])
+    .where("id", orderId)
+    .first();
+
+  if (!orderRow) {
+    return null;
+  }
+
+  const orderItemsByOrderId = await findItemsByOrderId({
+    orderIds: [orderId],
+  });
+
+  return transformFromRow({
+    orderRow,
+    orderItems: orderItemsByOrderId.get(orderRow.id) ?? [],
+  });
+}
+
 async function findItemsByOrderId({
   orderIds,
 }: {
@@ -102,7 +137,7 @@ async function findItemsByOrderId({
   return orderItemRows.reduce<Map<string, OrderItem[]>>(
     (itemsByOrderId, orderItemRow) => {
       const orderItems = itemsByOrderId.get(orderItemRow.order_id) ?? [];
-      
+
       orderItems.push(transformItemFromRow({ orderItemRow }));
 
       itemsByOrderId.set(orderItemRow.order_id, orderItems);
