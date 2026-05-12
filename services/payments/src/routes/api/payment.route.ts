@@ -6,6 +6,7 @@ import {
   MAX_PAYMENTS_LIMIT,
 } from "../../constants/index.js";
 import { paymentManager } from "../../managers/index.js";
+import getOutboxEventMetadata from "../../tools/get-outbox-event-metadata.js";
 import * as paymentSchema from "../schemas/payment.schema.js";
 
 export function registerPaymentRoutes({ router }: { router: Router }) {
@@ -17,8 +18,13 @@ export function registerPaymentRoutes({ router }: { router: Router }) {
         response: paymentSchema.AuthorizePaymentResponse,
       },
       handler: async function ({ request }) {
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
+
         return paymentManager.authorize({
           authorizePaymentInput: request.body,
+          outboxEventMetadata,
         });
       },
     }),
@@ -34,10 +40,14 @@ export function registerPaymentRoutes({ router }: { router: Router }) {
       },
       handler: async function ({ request }) {
         const { paymentId } = request.params;
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
 
         return paymentManager.refund({
           paymentId,
           refundPaymentInput: request.body,
+          outboxEventMetadata,
         });
       },
     }),

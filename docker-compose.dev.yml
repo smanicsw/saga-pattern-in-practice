@@ -3,6 +3,7 @@ services:
     working_dir: /app
     environment:
       NODE_ENV: development
+      EXPOSE_ERROR_DETAILS: "true"
     volumes:
       - ./:/app
     command:
@@ -20,6 +21,7 @@ services:
     working_dir: /app
     environment:
       NODE_ENV: development
+      EXPOSE_ERROR_DETAILS: "true"
     volumes:
       - ./:/app
     command:
@@ -27,13 +29,14 @@ services:
       - -c
       - |
         corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
         until corepack pnpm --filter @saga/payments-service db:migrate:latest; do
           echo "Waiting for payments-db and retrying migrations..."
           sleep 2
         done
         corepack pnpm --filter @saga/payments-service exec tsx watch src/index.ts
 
-  inventory:
+  payments-outbox-worker:
     working_dir: /app
     environment:
       NODE_ENV: development
@@ -44,6 +47,26 @@ services:
       - -c
       - |
         corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
+        until corepack pnpm --filter @saga/payments-service db:migrate:latest; do
+          echo "Waiting for payments-db and retrying migrations..."
+          sleep 2
+        done
+        corepack pnpm --filter @saga/payments-service outbox:worker
+
+  inventory:
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+      EXPOSE_ERROR_DETAILS: "true"
+    volumes:
+      - ./:/app
+    command:
+      - sh
+      - -c
+      - |
+        corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
         until corepack pnpm --filter @saga/inventory-service db:migrate:latest; do
           echo "Waiting for inventory-db and retrying migrations..."
           sleep 2
@@ -61,6 +84,7 @@ services:
       - -c
       - |
         corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
         until corepack pnpm --filter @saga/inventory-service db:migrate:latest; do
           echo "Waiting for inventory-db and retrying migrations..."
           sleep 2

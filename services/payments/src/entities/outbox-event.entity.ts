@@ -17,7 +17,7 @@ export type {
   OutboxEventStatus,
 } from "@saga/outbox-kit";
 
-export type OutboxEventService = "inventory";
+export type OutboxEventService = "payments";
 
 export type OutboxEvent<TPayload = unknown> = BaseOutboxEvent<
   TPayload,

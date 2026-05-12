@@ -8,7 +8,7 @@ import * as outboxEventRepository from "../repositories/outbox-event.repository.
 export type { CreateOutboxEventInput };
 
 const outboxEventManager = createOutboxEventManager({
-  service: "inventory",
+  service: "payments",
   repository: outboxEventRepository,
 });
 

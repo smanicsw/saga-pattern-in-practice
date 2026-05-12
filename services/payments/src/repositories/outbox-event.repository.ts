@@ -2,7 +2,7 @@ import { createOutboxEventRepository } from "@saga/outbox-kit";
 
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 
-const outboxEventRepository = createOutboxEventRepository<"inventory">({
+const outboxEventRepository = createOutboxEventRepository<"payments">({
   getQueryBuilder,
 });
 

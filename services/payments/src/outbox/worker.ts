@@ -14,8 +14,8 @@ import * as eventPublisher from "../infrastructure/adapters/message-broker/event
 import * as outboxEventRepository from "../repositories/outbox-event.repository.js";
 
 const worker = createOutboxWorker({
-  serviceName: "inventory",
-  topic: "outbox-events.inventory",
+  serviceName: "payments",
+  topic: "outbox-events.payments",
   connectDatabase,
   disconnectDatabase,
   withTransaction,
@@ -32,7 +32,7 @@ export const startOutboxWorker = worker.startOutboxWorker;
 function registerShutdownHandlers() {
   for (const signal of ["SIGINT", "SIGTERM"] as const) {
     process.on(signal, () => {
-      logger.info({ signal }, "stopping inventory outbox worker");
+      logger.info({ signal }, "stopping payments outbox worker");
       worker.stopOutboxWorker();
     });
   }
@@ -42,7 +42,7 @@ if (isDirectRun()) {
   registerShutdownHandlers();
 
   startOutboxWorker().catch((error) => {
-    logger.error({ error }, "failed to start inventory outbox worker");
+    logger.error({ error }, "failed to start payments outbox worker");
     process.exit(1);
   });
 }

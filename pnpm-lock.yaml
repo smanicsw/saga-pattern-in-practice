@@ -31,11 +31,23 @@ importers:
         specifier: ^5.0.3
         version: 5.0.6
 
+  packages/outbox-kit:
+    dependencies:
+      '@saga/http-kit':
+        specifier: workspace:*
+        version: link:../http-kit
+      knex:
+        specifier: ^3.1.0
+        version: 3.2.10(pg@8.20.0)
+
   services/inventory:
     dependencies:
       '@saga/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
+      '@saga/outbox-kit':
+        specifier: workspace:*
+        version: link:../../packages/outbox-kit
       '@sinclair/typebox':
         specifier: ^0.34.49
         version: 0.34.49
@@ -125,6 +137,9 @@ importers:
       '@saga/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
+      '@saga/outbox-kit':
+        specifier: workspace:*
+        version: link:../../packages/outbox-kit
       '@sinclair/typebox':
         specifier: ^0.34.49
         version: 0.34.49

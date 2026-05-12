@@ -47,6 +47,27 @@ services:
         done
         node dist/index.js
 
+  payments-outbox-worker:
+    build:
+      context: .
+      args:
+        SERVICE: payments
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${PAYMENT_DATABASE_URL}
+    depends_on:
+      payments-db:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        until node_modules/.bin/knex migrate:latest --knexfile knexfile.cjs; do
+          echo "Waiting for payments-db and retrying migrations..."
+          sleep 2
+        done
+        node dist/outbox/worker.js
+
   inventory:
     build:
       context: .
