@@ -137,39 +137,35 @@ async function updateOneStatus({
   orderId: OrderId;
   status: Extract<Order["status"], "CANCELLED" | "CONFIRMED">;
 }): Promise<Order> {
-  return withTransaction({
-    operation: async () => {
-      const order = await orderRepository.findOneForUpdate({
-        orderId,
-      });
+  const order = await orderRepository.findOneForUpdate({
+    orderId,
+  });
 
-      if (!order) {
-        throw new OrderNotFoundError();
-      }
+  if (!order) {
+    throw new OrderNotFoundError();
+  }
 
-      if (order.status === status) {
-        return order;
-      }
+  if (order.status === status) {
+    return order;
+  }
 
-      if (order.status !== "PENDING") {
-        throw new InvalidOrderStatusError();
-      }
+  if (order.status !== "PENDING") {
+    throw new InvalidOrderStatusError();
+  }
 
-      const updatedOrder = await orderRepository.updateOneStatus({
-        orderId,
-        updateOrderStatus: {
-          status,
-          updatedAt: new Date().toISOString(),
-        },
-      });
-
-      if (!updatedOrder) {
-        throw new OrderNotFoundError();
-      }
-
-      return updatedOrder;
+  const updatedOrder = await orderRepository.updateOneStatus({
+    orderId,
+    updateOrderStatus: {
+      status,
+      updatedAt: new Date().toISOString(),
     },
   });
+
+  if (!updatedOrder) {
+    throw new OrderNotFoundError();
+  }
+
+  return updatedOrder;
 }
 
 function aggregateOrderItems({

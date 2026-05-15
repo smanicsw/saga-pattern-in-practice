@@ -5,6 +5,7 @@ import {
   DEFAULT_ORDERS_LIMIT,
   MAX_ORDERS_LIMIT,
 } from "../../../constants/index.js";
+import { withTransaction } from "../../../infrastructure/adapters/database/index.js";
 import { orderManager } from "../../../managers/index.js";
 import * as orderSchema from "../../schemas/order.schema.js";
 
@@ -32,6 +33,7 @@ export function registerOrderRoutes({ router }: { router: Router }) {
         params: orderSchema.ConfirmOneOrderParams,
         response: orderSchema.ConfirmOneOrderResponse,
       },
+      runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { orderId } = request.params;
 
@@ -49,6 +51,7 @@ export function registerOrderRoutes({ router }: { router: Router }) {
         params: orderSchema.CancelOneOrderParams,
         response: orderSchema.CancelOneOrderResponse,
       },
+      runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { orderId } = request.params;
 
