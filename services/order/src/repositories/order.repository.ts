@@ -1,5 +1,9 @@
 import type {
   FindManyOrdersQuery,
+  NewOrder,
+  NewOrderItem,
+  NewOrderItemRow,
+  NewOrderRow,
   Order,
   OrderId,
   OrderItem,
@@ -7,7 +11,7 @@ import type {
   OrderList,
   OrderRow,
 } from "../entities/index.js";
-import { getDatabase } from "../infrastructure/adapters/database/index.js";
+import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 import toStringValue from "../tools/to-string-value.js";
 
 export async function findMany({
@@ -15,7 +19,7 @@ export async function findMany({
 }: {
   query: FindManyOrdersQuery;
 }): Promise<OrderList> {
-  const db = getDatabase();
+  const db = getQueryBuilder();
 
   const orderRows: OrderRow[] = await db<OrderRow>("orders")
     .select([
@@ -77,7 +81,7 @@ export async function findOne({
 }: {
   orderId: OrderId;
 }): Promise<Order | null> {
-  const db = getDatabase();
+  const db = getQueryBuilder();
 
   const orderRow = await db<OrderRow>("orders")
     .select([
@@ -106,6 +110,60 @@ export async function findOne({
   });
 }
 
+export async function createOne({
+  newOrder,
+  newOrderItems,
+}: {
+  newOrder: NewOrder;
+  newOrderItems: NewOrderItem[];
+}): Promise<Order> {
+  const db = getQueryBuilder();
+
+  const [createdOrderRow] = await db<OrderRow>("orders")
+    .insert(transformToRow({ newOrder }))
+    .returning([
+      "id",
+      "customer_id",
+      "status",
+      "total_amount",
+      "currency",
+      "created_at",
+      "updated_at",
+    ]);
+
+  const createdOrderItemRows: OrderItemRow[] =
+    newOrderItems.length > 0
+      ? await db<OrderItemRow>("order_items")
+          .insert(
+            newOrderItems.map((newOrderItem) =>
+              transformItemToRow({
+                orderId: createdOrderRow.id,
+                newOrderItem,
+              }),
+            ),
+          )
+          .returning([
+            "id",
+            "order_id",
+            "product_id",
+            "quantity",
+            "unit_price_snapshot",
+            "line_total_snapshot",
+            "sku_snapshot",
+            "name_snapshot",
+            "created_at",
+            "updated_at",
+          ])
+      : [];
+
+  return transformFromRow({
+    orderRow: createdOrderRow,
+    orderItems: createdOrderItemRows.map((orderItemRow) =>
+      transformItemFromRow({ orderItemRow }),
+    ),
+  });
+}
+
 async function findItemsByOrderId({
   orderIds,
 }: {
@@ -115,7 +173,7 @@ async function findItemsByOrderId({
     return new Map();
   }
 
-  const db = getDatabase();
+  const db = getQueryBuilder();
 
   const orderItemRows: OrderItemRow[] = await db<OrderItemRow>("order_items")
     .select([
@@ -146,6 +204,41 @@ async function findItemsByOrderId({
     },
     new Map(),
   );
+}
+
+function transformToRow({
+  newOrder,
+}: {
+  newOrder: NewOrder;
+}): NewOrderRow {
+  return {
+    customer_id: newOrder.customerId,
+    status: newOrder.status,
+    total_amount: String(newOrder.totalAmount),
+    currency: newOrder.currency,
+    created_at: newOrder.createdAt,
+    updated_at: newOrder.updatedAt,
+  };
+}
+
+function transformItemToRow({
+  orderId,
+  newOrderItem,
+}: {
+  orderId: OrderId;
+  newOrderItem: NewOrderItem;
+}): NewOrderItemRow {
+  return {
+    order_id: orderId,
+    product_id: newOrderItem.productId,
+    quantity: newOrderItem.quantity,
+    unit_price_snapshot: String(newOrderItem.unitPriceSnapshot),
+    line_total_snapshot: String(newOrderItem.lineTotalSnapshot),
+    sku_snapshot: newOrderItem.skuSnapshot,
+    name_snapshot: newOrderItem.nameSnapshot,
+    created_at: newOrderItem.createdAt,
+    updated_at: newOrderItem.updatedAt,
+  };
 }
 
 function transformFromRow({

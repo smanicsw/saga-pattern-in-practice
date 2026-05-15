@@ -69,3 +69,28 @@ export const FindManyOrdersResponse = Type.Object({
 });
 
 export type FindManyOrdersResponse = Static<typeof FindManyOrdersResponse>;
+
+export const CreateOneOrderBody = Type.Object(
+  {
+    customerId: Type.String({ minLength: 1, maxLength: 120 }),
+    items: Type.Array(
+      Type.Object(
+        {
+          productId: Type.String({ format: "uuid" }),
+          quantity: Type.Integer({ minimum: 1 }),
+        },
+        { additionalProperties: false },
+      ),
+      { minItems: 1 },
+    ),
+  },
+  {
+    additionalProperties: false,
+  },
+);
+
+export type CreateOneOrderBody = Static<typeof CreateOneOrderBody>;
+
+export const CreateOneOrderResponse = OrderResponse;
+
+export type CreateOneOrderResponse = Static<typeof CreateOneOrderResponse>;

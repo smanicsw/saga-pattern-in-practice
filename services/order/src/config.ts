@@ -13,6 +13,10 @@ const envSchema = Type.Object(
     ),
     ORDER_SERVICE_PORT: Type.Integer({ minimum: 1, default: 3001 }),
     DATABASE_URL: Type.String({ minLength: 1 }),
+    INVENTORY_SERVICE_BASE_URL: Type.String({
+      minLength: 1,
+      default: "http://localhost:3003",
+    }),
   },
   { additionalProperties: false },
 );

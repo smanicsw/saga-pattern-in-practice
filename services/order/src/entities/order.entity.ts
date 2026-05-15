@@ -27,6 +27,14 @@ export type Order = {
   updatedAt: string;
 };
 
+export type CreateOrderInput = {
+  customerId: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+  }>;
+};
+
 export type OrderRow = {
   id: OrderId;
   customer_id: string;
@@ -49,6 +57,14 @@ export type OrderItemRow = {
   created_at: string;
   updated_at: string;
 };
+
+export type NewOrder = Omit<Order, "id" | "items">;
+
+export type NewOrderRow = Omit<OrderRow, "id">;
+
+export type NewOrderItem = Omit<OrderItem, "id" | "orderId">;
+
+export type NewOrderItemRow = Omit<OrderItemRow, "id">;
 
 export type OrderList = {
   items: Order[];

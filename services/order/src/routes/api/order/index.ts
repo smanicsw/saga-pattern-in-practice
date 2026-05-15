@@ -9,6 +9,22 @@ import { orderManager } from "../../../managers/index.js";
 import * as orderSchema from "../../schemas/order.schema.js";
 
 export function registerOrderRoutes({ router }: { router: Router }) {
+  router.post(
+    "/orders",
+    defineRoute({
+      schemas: {
+        body: orderSchema.CreateOneOrderBody,
+        response: orderSchema.CreateOneOrderResponse,
+      },
+      status: 201,
+      handler: async function ({ request }) {
+        return orderManager.createOne({
+          createOrderInput: request.body,
+        });
+      },
+    }),
+  );
+
   router.get(
     "/orders",
     defineRoute({

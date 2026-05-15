@@ -21,6 +21,29 @@ type ApiRequestOptions = {
   headers?: Record<string, string>;
 };
 
+export async function createOne({
+  body,
+  headers,
+}: ApiRequestOptions & {
+  body: unknown;
+}): Promise<ApiResponse<Order>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(`${baseUrl}${SERVICE_API_PREFIX}/orders`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...headers,
+    },
+    body: JSON.stringify(body),
+  });
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Order>["body"],
+  };
+}
+
 export async function findMany({
   query,
   headers,
@@ -53,10 +76,13 @@ export async function findOne({
 }): Promise<ApiResponse<Order>> {
   const baseUrl = getBaseUrl();
 
-  const response = await fetch(`${baseUrl}${SERVICE_API_PREFIX}/orders/${orderId}`, {
-    method: "GET",
-    headers,
-  });
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/orders/${orderId}`,
+    {
+      method: "GET",
+      headers,
+    },
+  );
 
   return {
     status: response.status,
