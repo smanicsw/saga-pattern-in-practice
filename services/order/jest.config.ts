@@ -21,6 +21,7 @@ const config: Config = {
     ],
   },
   moduleNameMapper: {
+    "^@saga/http-kit$": "<rootDir>/../../packages/http-kit/src/index.ts",
     "^(\\.{1,2}/.*)\\.js$": "$1",
   },
 };

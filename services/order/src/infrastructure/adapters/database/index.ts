@@ -1,9 +1,11 @@
 import knex, { type Knex } from "knex";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 import { config } from "../../../config.js";
 import { logger } from "../logger/index.js";
 
 let db: Knex | null = null;
+const transactionContext = new AsyncLocalStorage<Knex.Transaction>();
 
 export function getDatabase(): Knex {
   if (!db) {
@@ -11,6 +13,33 @@ export function getDatabase(): Knex {
   }
 
   return db;
+}
+
+export function getCurrentTransaction(): Knex.Transaction | undefined {
+  return transactionContext.getStore();
+}
+
+export function getQueryBuilder(): Knex | Knex.Transaction {
+  const transaction = getCurrentTransaction();
+
+  return transaction ?? getDatabase();
+}
+
+export async function withTransaction<T>({
+  operation,
+}: {
+  operation: () => Promise<T>;
+}): Promise<T> {
+  const knexInstance = getDatabase();
+  const transaction = getCurrentTransaction();
+
+  if (transaction) {
+    return operation();
+  }
+
+  return knexInstance.transaction(async (trx) => {
+    return transactionContext.run(trx, operation);
+  });
 }
 
 export async function connectDatabase() {
