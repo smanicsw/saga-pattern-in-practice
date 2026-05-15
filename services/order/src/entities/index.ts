@@ -18,4 +18,6 @@ export type {
   OrderList,
   OrderRow,
   OrderStatus,
+  UpdateOrderStatus,
+  UpdateOrderStatusRow,
 } from "./order.entity.js";

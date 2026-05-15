@@ -89,3 +89,47 @@ export async function findOne({
     body: (await response.json()) as ApiResponse<Order>["body"],
   };
 }
+
+export async function confirmOne({
+  orderId,
+  headers,
+}: ApiRequestOptions & {
+  orderId: string;
+}): Promise<ApiResponse<Order>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/orders/${orderId}/confirm`,
+    {
+      method: "POST",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Order>["body"],
+  };
+}
+
+export async function cancelOne({
+  orderId,
+  headers,
+}: ApiRequestOptions & {
+  orderId: string;
+}): Promise<ApiResponse<Order>> {
+  const baseUrl = getBaseUrl();
+
+  const response = await fetch(
+    `${baseUrl}${SERVICE_API_PREFIX}/orders/${orderId}/cancel`,
+    {
+      method: "POST",
+      headers,
+    },
+  );
+
+  return {
+    status: response.status,
+    body: (await response.json()) as ApiResponse<Order>["body"],
+  };
+}

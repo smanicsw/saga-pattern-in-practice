@@ -25,6 +25,40 @@ export function registerOrderRoutes({ router }: { router: Router }) {
     }),
   );
 
+  router.post(
+    "/orders/:orderId/confirm",
+    defineRoute({
+      schemas: {
+        params: orderSchema.ConfirmOneOrderParams,
+        response: orderSchema.ConfirmOneOrderResponse,
+      },
+      handler: async function ({ request }) {
+        const { orderId } = request.params;
+
+        return orderManager.confirmOne({
+          orderId,
+        });
+      },
+    }),
+  );
+
+  router.post(
+    "/orders/:orderId/cancel",
+    defineRoute({
+      schemas: {
+        params: orderSchema.CancelOneOrderParams,
+        response: orderSchema.CancelOneOrderResponse,
+      },
+      handler: async function ({ request }) {
+        const { orderId } = request.params;
+
+        return orderManager.cancelOne({
+          orderId,
+        });
+      },
+    }),
+  );
+
   router.get(
     "/orders",
     defineRoute({

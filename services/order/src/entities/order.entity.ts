@@ -66,6 +66,10 @@ export type NewOrderItem = Omit<OrderItem, "id" | "orderId">;
 
 export type NewOrderItemRow = Omit<OrderItemRow, "id">;
 
+export type UpdateOrderStatus = Pick<Order, "status" | "updatedAt">;
+
+export type UpdateOrderStatusRow = Pick<OrderRow, "status" | "updated_at">;
+
 export type OrderList = {
   items: Order[];
   pagination: CursorPagination;

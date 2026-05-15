@@ -7,6 +7,7 @@ import type {
   OrderList,
 } from "../entities/index.js";
 import {
+  InvalidOrderStatusError,
   OrderCurrencyMismatchError,
   OrderNotFoundError,
 } from "../errors/errors.js";
@@ -104,6 +105,70 @@ export async function createOne({
         },
         newOrderItems,
       }),
+  });
+}
+
+export async function confirmOne({
+  orderId,
+}: {
+  orderId: OrderId;
+}): Promise<Order> {
+  return updateOneStatus({
+    orderId,
+    status: "CONFIRMED",
+  });
+}
+
+export async function cancelOne({
+  orderId,
+}: {
+  orderId: OrderId;
+}): Promise<Order> {
+  return updateOneStatus({
+    orderId,
+    status: "CANCELLED",
+  });
+}
+
+async function updateOneStatus({
+  orderId,
+  status,
+}: {
+  orderId: OrderId;
+  status: Extract<Order["status"], "CANCELLED" | "CONFIRMED">;
+}): Promise<Order> {
+  return withTransaction({
+    operation: async () => {
+      const order = await orderRepository.findOneForUpdate({
+        orderId,
+      });
+
+      if (!order) {
+        throw new OrderNotFoundError();
+      }
+
+      if (order.status === status) {
+        return order;
+      }
+
+      if (order.status !== "PENDING") {
+        throw new InvalidOrderStatusError();
+      }
+
+      const updatedOrder = await orderRepository.updateOneStatus({
+        orderId,
+        updateOrderStatus: {
+          status,
+          updatedAt: new Date().toISOString(),
+        },
+      });
+
+      if (!updatedOrder) {
+        throw new OrderNotFoundError();
+      }
+
+      return updatedOrder;
+    },
   });
 }
 

@@ -94,3 +94,19 @@ export type CreateOneOrderBody = Static<typeof CreateOneOrderBody>;
 export const CreateOneOrderResponse = OrderResponse;
 
 export type CreateOneOrderResponse = Static<typeof CreateOneOrderResponse>;
+
+export const ConfirmOneOrderParams = FindOneOrderParams;
+
+export type ConfirmOneOrderParams = Static<typeof ConfirmOneOrderParams>;
+
+export const ConfirmOneOrderResponse = OrderResponse;
+
+export type ConfirmOneOrderResponse = Static<typeof ConfirmOneOrderResponse>;
+
+export const CancelOneOrderParams = FindOneOrderParams;
+
+export type CancelOneOrderParams = Static<typeof CancelOneOrderParams>;
+
+export const CancelOneOrderResponse = OrderResponse;
+
+export type CancelOneOrderResponse = Static<typeof CancelOneOrderResponse>;

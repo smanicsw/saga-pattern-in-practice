@@ -10,6 +10,8 @@ import type {
   OrderItemRow,
   OrderList,
   OrderRow,
+  UpdateOrderStatus,
+  UpdateOrderStatusRow,
 } from "../entities/index.js";
 import { getQueryBuilder } from "../infrastructure/adapters/database/index.js";
 import toStringValue from "../tools/to-string-value.js";
@@ -110,6 +112,41 @@ export async function findOne({
   });
 }
 
+export async function findOneForUpdate({
+  orderId,
+}: {
+  orderId: OrderId;
+}): Promise<Order | null> {
+  const db = getQueryBuilder();
+
+  const orderRow = await db<OrderRow>("orders")
+    .select([
+      "id",
+      "customer_id",
+      "status",
+      "total_amount",
+      "currency",
+      "created_at",
+      "updated_at",
+    ])
+    .where("id", orderId)
+    .forUpdate()
+    .first();
+
+  if (!orderRow) {
+    return null;
+  }
+
+  const orderItemsByOrderId = await findItemsByOrderId({
+    orderIds: [orderId],
+  });
+
+  return transformFromRow({
+    orderRow,
+    orderItems: orderItemsByOrderId.get(orderRow.id) ?? [],
+  });
+}
+
 export async function createOne({
   newOrder,
   newOrderItems,
@@ -161,6 +198,42 @@ export async function createOne({
     orderItems: createdOrderItemRows.map((orderItemRow) =>
       transformItemFromRow({ orderItemRow }),
     ),
+  });
+}
+
+export async function updateOneStatus({
+  orderId,
+  updateOrderStatus,
+}: {
+  orderId: OrderId;
+  updateOrderStatus: UpdateOrderStatus;
+}): Promise<Order | null> {
+  const db = getQueryBuilder();
+
+  const [updatedOrderRow] = await db<OrderRow>("orders")
+    .where("id", orderId)
+    .update(transformStatusToRow({ updateOrderStatus }))
+    .returning([
+      "id",
+      "customer_id",
+      "status",
+      "total_amount",
+      "currency",
+      "created_at",
+      "updated_at",
+    ]);
+
+  if (!updatedOrderRow) {
+    return null;
+  }
+
+  const orderItemsByOrderId = await findItemsByOrderId({
+    orderIds: [orderId],
+  });
+
+  return transformFromRow({
+    orderRow: updatedOrderRow,
+    orderItems: orderItemsByOrderId.get(updatedOrderRow.id) ?? [],
   });
 }
 
@@ -218,6 +291,17 @@ function transformToRow({
     currency: newOrder.currency,
     created_at: newOrder.createdAt,
     updated_at: newOrder.updatedAt,
+  };
+}
+
+function transformStatusToRow({
+  updateOrderStatus,
+}: {
+  updateOrderStatus: UpdateOrderStatus;
+}): UpdateOrderStatusRow {
+  return {
+    status: updateOrderStatus.status,
+    updated_at: updateOrderStatus.updatedAt,
   };
 }
 

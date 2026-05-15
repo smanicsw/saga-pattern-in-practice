@@ -39,3 +39,13 @@ export class OrderCurrencyMismatchError extends HttpError {
     });
   }
 }
+
+export class InvalidOrderStatusError extends HttpError {
+  constructor() {
+    super({
+      status: 409,
+      code: "invalid_order_status",
+      message: "Invalid order status transition.",
+    });
+  }
+}
