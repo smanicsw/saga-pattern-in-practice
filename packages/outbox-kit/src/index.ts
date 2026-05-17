@@ -28,6 +28,7 @@ export {
   type OutboxQueryBuilder,
 } from "./repository.js";
 export {
+  createKafkaEventPublisher,
   createLoggingEventPublisher,
   type EventPublisherLogger,
   type PublishEventInput,

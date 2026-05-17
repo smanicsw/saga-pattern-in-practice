@@ -12,6 +12,7 @@ export type OutboxLogger = {
 };
 
 export type OutboxPublisher<TService extends string> = {
+  disconnect?: () => Promise<void>;
   publish: (input: {
     topic: string;
     key: string;
@@ -139,6 +140,7 @@ export function createOutboxWorker<TService extends string>({
     }
 
     await disconnectDatabase();
+    await publisher.disconnect?.();
   }
 
   function stopOutboxWorker() {

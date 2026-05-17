@@ -13,6 +13,10 @@ const envSchema = Type.Object(
     ),
     INVENTORY_SERVICE_PORT: Type.Integer({ minimum: 1, default: 3003 }),
     DATABASE_URL: Type.String({ minLength: 1 }),
+    KAFKA_BROKERS: Type.String({
+      minLength: 1,
+      default: "localhost:9092",
+    }),
   },
   { additionalProperties: false },
 );

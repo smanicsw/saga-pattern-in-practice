@@ -70,6 +70,9 @@ importers:
       '@saga/http-kit':
         specifier: workspace:*
         version: link:../http-kit
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
       knex:
         specifier: ^3.1.0
         version: 3.2.10(pg@8.20.0)
@@ -1861,6 +1864,10 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
+
+  kafkajs@2.2.4:
+    resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
+    engines: {node: '>=14.0.0'}
 
   knex@3.2.10:
     resolution: {integrity: sha512-oypTHfrc9i72iyxaUQBKHOxhcr0xM65MPf6FpN02nimsftXwzXprIkLjfXdubvhbu4PMWLp023q8o8CYvHSuZw==}
@@ -4420,6 +4427,8 @@ snapshots:
   json-parse-even-better-errors@2.3.1: {}
 
   json5@2.2.3: {}
+
+  kafkajs@2.2.4: {}
 
   knex@3.2.10(pg@8.20.0):
     dependencies:
