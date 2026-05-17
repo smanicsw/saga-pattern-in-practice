@@ -11,11 +11,26 @@ services:
       - -c
       - |
         corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
         until corepack pnpm --filter @saga/order-service db:migrate:latest; do
           echo "Waiting for order-db and retrying migrations..."
           sleep 2
         done
         corepack pnpm --filter @saga/order-service exec tsx watch src/index.ts
+
+  order-outbox-worker:
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./:/app
+    command:
+      - sh
+      - -c
+      - |
+        corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
+        corepack pnpm --filter @saga/order-service outbox:worker
 
   payments:
     working_dir: /app
@@ -48,10 +63,6 @@ services:
       - |
         corepack pnpm --filter @saga/http-kit build
         corepack pnpm --filter @saga/outbox-kit build
-        until corepack pnpm --filter @saga/payments-service db:migrate:latest; do
-          echo "Waiting for payments-db and retrying migrations..."
-          sleep 2
-        done
         corepack pnpm --filter @saga/payments-service outbox:worker
 
   inventory:
@@ -85,8 +96,4 @@ services:
       - |
         corepack pnpm --filter @saga/http-kit build
         corepack pnpm --filter @saga/outbox-kit build
-        until corepack pnpm --filter @saga/inventory-service db:migrate:latest; do
-          echo "Waiting for inventory-db and retrying migrations..."
-          sleep 2
-        done
         corepack pnpm --filter @saga/inventory-service outbox:worker

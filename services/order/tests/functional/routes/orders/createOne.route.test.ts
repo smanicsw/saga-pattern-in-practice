@@ -4,7 +4,10 @@ import type { AddressInfo } from "node:net";
 
 import { ISO_DATE_REGEX, UUID_REGEX } from "../../../../src/constants/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
-import { setupTestDatabaseHooks } from "../../../utils/database.js";
+import {
+  getDatabase,
+  setupTestDatabaseHooks,
+} from "../../../utils/database.js";
 
 import * as api from "../../../apis/index.js";
 
@@ -115,6 +118,24 @@ describe("POST /api/v1/order/orders", () => {
         ],
         createdAt: expect.stringMatching(ISO_DATE_REGEX),
         updatedAt: expect.stringMatching(ISO_DATE_REGEX),
+      });
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: "order.order.created",
+        event_version: 1,
+        action: "create",
+        service: "order",
+        aggregate_type: "order",
+        aggregate_id: createOneResponse.body.data.id,
+        correlation_id: null,
+        causation_id: null,
+        status: "PENDING",
+      });
+      expect(outboxRows[0].payload).toEqual({
+        current: createOneResponse.body.data,
       });
     });
 

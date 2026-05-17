@@ -7,6 +7,7 @@ import {
 } from "../../../constants/index.js";
 import { withTransaction } from "../../../infrastructure/adapters/database/index.js";
 import { orderManager } from "../../../managers/index.js";
+import getOutboxEventMetadata from "../../../tools/get-outbox-event-metadata.js";
 import * as orderSchema from "../../schemas/order.schema.js";
 
 export function registerOrderRoutes({ router }: { router: Router }) {
@@ -19,8 +20,13 @@ export function registerOrderRoutes({ router }: { router: Router }) {
       },
       status: 201,
       handler: async function ({ request }) {
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
+
         return orderManager.createOne({
           createOrderInput: request.body,
+          outboxEventMetadata,
         });
       },
     }),
@@ -36,9 +42,13 @@ export function registerOrderRoutes({ router }: { router: Router }) {
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { orderId } = request.params;
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
 
         return orderManager.confirmOne({
           orderId,
+          outboxEventMetadata,
         });
       },
     }),
@@ -54,9 +64,13 @@ export function registerOrderRoutes({ router }: { router: Router }) {
       runInTransaction: (operation) => withTransaction({ operation }),
       handler: async function ({ request }) {
         const { orderId } = request.params;
+        const outboxEventMetadata = getOutboxEventMetadata({
+          headers: request.req.headers,
+        });
 
         return orderManager.cancelOne({
           orderId,
+          outboxEventMetadata,
         });
       },
     }),

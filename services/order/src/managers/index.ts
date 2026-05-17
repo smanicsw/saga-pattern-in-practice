@@ -1,5 +1,6 @@
 export * as inventoryManager from "./inventory.manager.js";
 export * as orderManager from "./order.manager.js";
+export * as outboxEventManager from "./outbox-event.manager.js";
 
 export function createOrderManager({}: Record<string, never>) {
   return {
