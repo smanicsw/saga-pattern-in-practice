@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.12.4",
   "scripts": {
     "dev": "corepack pnpm --filter @saga/order-service dev",
+    "dev:web": "corepack pnpm --filter @saga/web dev",
     "dev:order": "corepack pnpm --filter @saga/order-service dev",
     "dev:payments": "corepack pnpm --filter @saga/payments-service dev",
     "dev:inventory": "corepack pnpm --filter @saga/inventory-service dev",
@@ -19,7 +20,9 @@
     "test:functional": "node scripts/service-test.mjs functional",
     "test:down": "node scripts/service-test.mjs down",
     "build": "corepack pnpm -r build",
+    "build:web": "corepack pnpm --filter @saga/web build",
     "typecheck": "corepack pnpm -r typecheck",
+    "typecheck:web": "corepack pnpm --filter @saga/web typecheck",
     "lint": "corepack pnpm -r lint",
     "format": "prettier . --write",
     "format:check": "prettier . --check"
