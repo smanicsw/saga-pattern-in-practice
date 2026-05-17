@@ -6,6 +6,8 @@ import {
   getDatabase,
 } from "../../src/infrastructure/adapters/database/index.js";
 
+export { getDatabase };
+
 const migrationsDirectory = path.resolve(
   process.cwd(),
   "src/infrastructure/adapters/database/migrations",
@@ -39,6 +41,7 @@ export async function cleanTestDatabase() {
 
   await db.raw(`
     truncate table
+      outbox_events,
       order_items,
       orders
     restart identity cascade

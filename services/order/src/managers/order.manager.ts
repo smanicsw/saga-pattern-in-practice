@@ -3,9 +3,17 @@ import type {
   FindManyOrdersQuery,
   NewOrderItem,
   Order,
+  OrderCancelledPayload,
+  OrderConfirmedPayload,
+  OrderCreatedPayload,
   OrderId,
   OrderList,
+  OutboxEventMetadata,
 } from "../entities/index.js";
+import {
+  OrderEventType,
+  OrderEventVersion,
+} from "../entities/order-event.entity.js";
 import {
   InvalidOrderStatusError,
   OrderCurrencyMismatchError,
@@ -13,6 +21,8 @@ import {
 } from "../errors/errors.js";
 import { withTransaction } from "../infrastructure/adapters/database/index.js";
 import * as inventoryManager from "./inventory.manager.js";
+import type { CreateOutboxEventInput } from "./outbox-event.manager.js";
+import * as outboxEventManager from "./outbox-event.manager.js";
 import * as orderRepository from "../repositories/order.repository.js";
 
 export async function findMany({
@@ -43,8 +53,10 @@ export async function findOne({
 
 export async function createOne({
   createOrderInput,
+  outboxEventMetadata,
 }: {
   createOrderInput: CreateOrderInput;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Order> {
   const requestedItems = aggregateOrderItems({
     items: createOrderInput.items,
@@ -93,8 +105,8 @@ export async function createOne({
   );
 
   return withTransaction({
-    operation: async () =>
-      orderRepository.createOne({
+    operation: async () => {
+      const order = await orderRepository.createOne({
         newOrder: {
           customerId: createOrderInput.customerId,
           status: "PENDING",
@@ -104,37 +116,55 @@ export async function createOne({
           updatedAt: date,
         },
         newOrderItems,
-      }),
+      });
+
+      const orderCreatedOutboxEvent = buildOrderCreatedOutboxEvent({
+        order,
+        outboxEventMetadata,
+      });
+
+      await outboxEventManager.createOne(orderCreatedOutboxEvent);
+
+      return order;
+    },
   });
 }
 
 export async function confirmOne({
   orderId,
+  outboxEventMetadata,
 }: {
   orderId: OrderId;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Order> {
   return updateOneStatus({
     orderId,
+    outboxEventMetadata,
     status: "CONFIRMED",
   });
 }
 
 export async function cancelOne({
   orderId,
+  outboxEventMetadata,
 }: {
   orderId: OrderId;
+  outboxEventMetadata?: OutboxEventMetadata;
 }): Promise<Order> {
   return updateOneStatus({
     orderId,
+    outboxEventMetadata,
     status: "CANCELLED",
   });
 }
 
 async function updateOneStatus({
   orderId,
+  outboxEventMetadata,
   status,
 }: {
   orderId: OrderId;
+  outboxEventMetadata?: OutboxEventMetadata;
   status: Extract<Order["status"], "CANCELLED" | "CONFIRMED">;
 }): Promise<Order> {
   const order = await orderRepository.findOneForUpdate({
@@ -165,7 +195,92 @@ async function updateOneStatus({
     throw new OrderNotFoundError();
   }
 
+  const orderStatusUpdatedOutboxEvent = buildOrderStatusUpdatedOutboxEvent({
+    order: updatedOrder,
+    outboxEventMetadata,
+  });
+
+  await outboxEventManager.createOne(orderStatusUpdatedOutboxEvent);
+
   return updatedOrder;
+}
+
+function buildOrderCreatedOutboxEvent({
+  order,
+  outboxEventMetadata,
+}: {
+  order: Order;
+  outboxEventMetadata?: OutboxEventMetadata;
+}): CreateOutboxEventInput<OrderCreatedPayload> {
+  return {
+    type: OrderEventType.Created,
+    version: OrderEventVersion.Created,
+    action: "create",
+    aggregate: buildOrderAggregate({ order }),
+    payload: {
+      current: order,
+    },
+    ...(outboxEventMetadata ?? {}),
+  };
+}
+
+function buildOrderStatusUpdatedOutboxEvent({
+  order,
+  outboxEventMetadata,
+}: {
+  order: Order;
+  outboxEventMetadata?: OutboxEventMetadata;
+}): CreateOutboxEventInput<OrderConfirmedPayload | OrderCancelledPayload> {
+  if (order.status === "CONFIRMED") {
+    return {
+      type: OrderEventType.Confirmed,
+      version: OrderEventVersion.Confirmed,
+      action: "update",
+      aggregate: buildOrderAggregate({ order }),
+      payload: {
+        order: {
+          id: order.id,
+          previous: {
+            status: "PENDING",
+          },
+          current: {
+            status: "CONFIRMED",
+          },
+        },
+      },
+      ...(outboxEventMetadata ?? {}),
+    };
+  }
+
+  if (order.status === "CANCELLED") {
+    return {
+      type: OrderEventType.Cancelled,
+      version: OrderEventVersion.Cancelled,
+      action: "update",
+      aggregate: buildOrderAggregate({ order }),
+      payload: {
+        order: {
+          id: order.id,
+          previous: {
+            status: "PENDING",
+          },
+          current: {
+            status: "CANCELLED",
+          },
+        },
+      },
+      ...(outboxEventMetadata ?? {}),
+    };
+  }
+
+  throw new InvalidOrderStatusError();
+}
+
+function buildOrderAggregate({ order }: { order: Order }) {
+  return {
+    type: "order",
+    id: order.id,
+  };
 }
 
 function aggregateOrderItems({

@@ -3,7 +3,11 @@ import { randomUUID } from "node:crypto";
 import { ISO_DATE_REGEX } from "../../../../src/constants/index.js";
 import type { Order } from "../../../../src/entities/index.js";
 import { startTestApp, type TestApp } from "../../../utils/app.js";
-import { insert, setupTestDatabaseHooks } from "../../../utils/database.js";
+import {
+  getDatabase,
+  insert,
+  setupTestDatabaseHooks,
+} from "../../../utils/database.js";
 
 import * as api from "../../../apis/index.js";
 import * as fixtures from "../../../fixtures/index.js";
@@ -46,6 +50,32 @@ describe("POST /api/v1/order/orders/:orderId/cancel", () => {
         status: "CANCELLED",
         updatedAt: expect.stringMatching(ISO_DATE_REGEX),
       });
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(1);
+      expect(outboxRows[0]).toMatchObject({
+        event_type: "order.order.cancelled",
+        event_version: 1,
+        action: "update",
+        service: "order",
+        aggregate_type: "order",
+        aggregate_id: order.id,
+        correlation_id: null,
+        causation_id: null,
+        status: "PENDING",
+      });
+      expect(outboxRows[0].payload).toEqual({
+        order: {
+          id: order.id,
+          previous: {
+            status: "PENDING",
+          },
+          current: {
+            status: "CANCELLED",
+          },
+        },
+      });
     });
 
     it("should be idempotent if order is already cancelled", async () => {
@@ -70,6 +100,10 @@ describe("POST /api/v1/order/orders/:orderId/cancel", () => {
       }
 
       expect(cancelOneResponse.body.data).toEqual(buildExpectedOrder({ order }));
+
+      const outboxRows = await getDatabase()("outbox_events").select("*");
+
+      expect(outboxRows).toHaveLength(0);
     });
   });
 
