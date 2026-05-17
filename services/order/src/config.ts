@@ -17,6 +17,10 @@ const envSchema = Type.Object(
       minLength: 1,
       default: "http://localhost:3003",
     }),
+    KAFKA_BROKERS: Type.String({
+      minLength: 1,
+      default: "localhost:9092",
+    }),
   },
   { additionalProperties: false },
 );
