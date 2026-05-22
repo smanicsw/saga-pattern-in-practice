@@ -32,6 +32,20 @@ services:
         corepack pnpm --filter @saga/outbox-kit build
         corepack pnpm --filter @saga/order-service outbox:worker
 
+  order-orchestrator-worker:
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./:/app
+    command:
+      - sh
+      - -c
+      - |
+        corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
+        corepack pnpm --filter @saga/order-service orchestrator:worker
+
   payments:
     working_dir: /app
     environment:

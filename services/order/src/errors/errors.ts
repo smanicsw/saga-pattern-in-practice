@@ -30,6 +30,38 @@ export class InventoryServiceUnavailableError extends HttpError {
   }
 }
 
+export class InventoryRequestFailedError extends HttpError {
+  constructor({
+    upstreamError,
+    upstreamStatus,
+  }: {
+    upstreamError: string;
+    upstreamStatus: number;
+  }) {
+    super({
+      status: 502,
+      code: "inventory_request_failed",
+      message: "Inventory service rejected the request.",
+    });
+
+    this.upstreamError = upstreamError;
+    this.upstreamStatus = upstreamStatus;
+  }
+
+  readonly upstreamError: string;
+  readonly upstreamStatus: number;
+}
+
+export class PaymentsServiceUnavailableError extends HttpError {
+  constructor() {
+    super({
+      status: 502,
+      code: "payments_service_unavailable",
+      message: "Payments service is unavailable.",
+    });
+  }
+}
+
 export class OrderCurrencyMismatchError extends HttpError {
   constructor() {
     super({

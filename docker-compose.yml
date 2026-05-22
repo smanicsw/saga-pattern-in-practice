@@ -9,6 +9,7 @@ services:
       ORDER_SERVICE_PORT: ${ORDER_SERVICE_PORT}
       DATABASE_URL: ${ORDER_DATABASE_URL}
       INVENTORY_SERVICE_BASE_URL: ${INVENTORY_SERVICE_BASE_URL:-http://inventory:3003}
+      PAYMENTS_SERVICE_BASE_URL: ${PAYMENTS_SERVICE_BASE_URL:-http://payments:3002}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:29092}
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
@@ -42,6 +43,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV}
       DATABASE_URL: ${ORDER_DATABASE_URL}
+      INVENTORY_SERVICE_BASE_URL: ${INVENTORY_SERVICE_BASE_URL:-http://inventory:3003}
+      PAYMENTS_SERVICE_BASE_URL: ${PAYMENTS_SERVICE_BASE_URL:-http://payments:3002}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:29092}
     depends_on:
       order:
@@ -53,6 +56,29 @@ services:
       - -c
       - |
         node dist/outbox/worker.js
+
+  order-orchestrator-worker:
+    build:
+      context: .
+      args:
+        SERVICE: order
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${ORDER_DATABASE_URL}
+      INVENTORY_SERVICE_BASE_URL: ${INVENTORY_SERVICE_BASE_URL:-http://inventory:3003}
+      PAYMENTS_SERVICE_BASE_URL: ${PAYMENTS_SERVICE_BASE_URL:-http://payments:3002}
+      KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:29092}
+      KAFKA_ORDER_ORCHESTRATOR_GROUP_ID: ${KAFKA_ORDER_ORCHESTRATOR_GROUP_ID:-order-saga-orchestrator}
+    depends_on:
+      order:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command:
+      - sh
+      - -c
+      - |
+        node dist/orchestrator/worker.js
 
   payments:
     build:

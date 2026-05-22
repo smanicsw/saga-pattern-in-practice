@@ -24,6 +24,7 @@ import * as inventoryManager from "./inventory.manager.js";
 import type { CreateOutboxEventInput } from "./outbox-event.manager.js";
 import * as outboxEventManager from "./outbox-event.manager.js";
 import * as orderRepository from "../repositories/order.repository.js";
+import * as orderSagaRepository from "../repositories/order-saga.repository.js";
 
 export async function findMany({
   query,
@@ -124,6 +125,20 @@ export async function createOne({
       });
 
       await outboxEventManager.createOne(orderCreatedOutboxEvent);
+
+      await orderSagaRepository.createOneOrFindExisting({
+        newOrderSaga: {
+          orderId: order.id,
+          status: "STARTED",
+          currentStep: "RESERVE_INVENTORY",
+          reservationId: null,
+          paymentId: null,
+          paymentMethodToken: createOrderInput.paymentMethodToken ?? null,
+          failureReason: null,
+          createdAt: date,
+          updatedAt: date,
+        },
+      });
 
       return order;
     },

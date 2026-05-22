@@ -1,5 +1,6 @@
 import type { OutboxEvent } from "./entities.js";
 import { Kafka, logLevel, type Producer } from "kafkajs";
+import { normalizeKafkaBrokers } from "./kafka.js";
 
 export type EventPublisherLogger = {
   info: (object: unknown, message?: string) => void;
@@ -137,18 +138,6 @@ export function createKafkaEventPublisher({
     disconnect,
     publish,
   };
-}
-
-function normalizeKafkaBrokers({
-  brokers,
-}: {
-  brokers: string | string[];
-}): string[] {
-  const parsedBrokers = Array.isArray(brokers)
-    ? brokers
-    : brokers.split(",");
-
-  return parsedBrokers.map((broker) => broker.trim()).filter(Boolean);
 }
 
 function buildHeaders<TPayload, TService extends string>({

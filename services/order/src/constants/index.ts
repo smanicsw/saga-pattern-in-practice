@@ -17,6 +17,18 @@ export const INVENTORY_SERVICE_BASE_URL = {
   },
 };
 
+export const PAYMENTS_SERVICE_NAME = "payments";
+
+export const PAYMENTS_SERVICE_API_PREFIX = "/api/v1/payments";
+
+export const PAYMENTS_SERVICE_BASE_URL = {
+  get value(): string {
+    return (
+      process.env.PAYMENTS_SERVICE_BASE_URL ?? config.PAYMENTS_SERVICE_BASE_URL
+    );
+  },
+};
+
 export const DEFAULT_ORDERS_LIMIT = 20;
 
 export const MAX_ORDERS_LIMIT = 100;

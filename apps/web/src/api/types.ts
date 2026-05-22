@@ -74,6 +74,7 @@ export type OrderList = {
 
 export type CreateOrderInput = {
   customerId: string;
+  paymentMethodToken?: string;
   items: Array<{
     productId: string;
     quantity: number;
