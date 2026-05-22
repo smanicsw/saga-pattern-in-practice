@@ -32,6 +32,24 @@ services:
         corepack pnpm --filter @saga/outbox-kit build
         corepack pnpm --filter @saga/order-service outbox:worker
 
+  order-saga-worker:
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./:/app
+    command:
+      - sh
+      - -c
+      - |
+        corepack pnpm --filter @saga/http-kit build
+        corepack pnpm --filter @saga/outbox-kit build
+        until corepack pnpm --filter @saga/order-saga-service db:migrate:latest; do
+          echo "Waiting for order-saga-db and retrying migrations..."
+          sleep 2
+        done
+        corepack pnpm --filter @saga/order-saga-service orchestrator:worker
+
   payments:
     working_dir: /app
     environment:

@@ -73,6 +73,9 @@ export type FindManyOrdersResponse = Static<typeof FindManyOrdersResponse>;
 export const CreateOneOrderBody = Type.Object(
   {
     customerId: Type.String({ minLength: 1, maxLength: 120 }),
+    paymentMethodToken: Type.Optional(
+      Type.String({ minLength: 1, maxLength: 255 }),
+    ),
     items: Type.Array(
       Type.Object(
         {

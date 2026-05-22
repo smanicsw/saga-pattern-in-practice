@@ -14,6 +14,14 @@ export type {
   OutboxEventStatus,
 } from "./entities.js";
 export {
+  createKafkaEventConsumer,
+  parseKafkaOutboxEventMessage,
+  type ConsumedKafkaEventContext,
+  type EventConsumerLogger,
+  type KafkaEventHandler,
+  type KafkaEventHandlerByType,
+} from "./consumer.js";
+export {
   DEFAULT_CAUSATION_ID_HEADER,
   DEFAULT_CORRELATION_ID_HEADER,
   getOutboxEventMetadata,

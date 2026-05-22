@@ -73,9 +73,7 @@ export async function createOne({
 
   const currency = products[0].product.currency;
 
-  if (
-    products.some(({ product }) => product.currency !== currency)
-  ) {
+  if (products.some(({ product }) => product.currency !== currency)) {
     throw new OrderCurrencyMismatchError();
   }
 
@@ -121,6 +119,7 @@ export async function createOne({
       const orderCreatedOutboxEvent = buildOrderCreatedOutboxEvent({
         order,
         outboxEventMetadata,
+        paymentMethodToken: createOrderInput.paymentMethodToken ?? null,
       });
 
       await outboxEventManager.createOne(orderCreatedOutboxEvent);
@@ -208,9 +207,11 @@ async function updateOneStatus({
 function buildOrderCreatedOutboxEvent({
   order,
   outboxEventMetadata,
+  paymentMethodToken,
 }: {
   order: Order;
   outboxEventMetadata?: OutboxEventMetadata;
+  paymentMethodToken: string | null;
 }): CreateOutboxEventInput<OrderCreatedPayload> {
   return {
     type: OrderEventType.Created,
@@ -219,6 +220,7 @@ function buildOrderCreatedOutboxEvent({
     aggregate: buildOrderAggregate({ order }),
     payload: {
       current: order,
+      paymentMethodToken,
     },
     ...(outboxEventMetadata ?? {}),
   };

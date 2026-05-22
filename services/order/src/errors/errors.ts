@@ -30,6 +30,28 @@ export class InventoryServiceUnavailableError extends HttpError {
   }
 }
 
+export class InventoryRequestFailedError extends HttpError {
+  constructor({
+    upstreamError,
+    upstreamStatus,
+  }: {
+    upstreamError: string;
+    upstreamStatus: number;
+  }) {
+    super({
+      status: 502,
+      code: "inventory_request_failed",
+      message: "Inventory service rejected the request.",
+    });
+
+    this.upstreamError = upstreamError;
+    this.upstreamStatus = upstreamStatus;
+  }
+
+  readonly upstreamError: string;
+  readonly upstreamStatus: number;
+}
+
 export class OrderCurrencyMismatchError extends HttpError {
   constructor() {
     super({

@@ -27,8 +27,9 @@ http://localhost:3003/api/v1/inventory
 - Database: PostgreSQL
 - Migrations: `src/infrastructure/adapters/database/migrations`
 - Message publisher adapter: `src/infrastructure/adapters/message-broker/event-publisher.ts`
+- Broker topic: `outbox-events.inventory`
 
-The current message publisher is a stub that logs published events. It can be replaced by a real broker adapter later without changing the outbox table or event creation flow.
+The outbox worker publishes pending events to Kafka through `@saga/outbox-kit`. The Order Saga worker consumes reservation events from `outbox-events.inventory` and uses them to advance or compensate the order workflow.
 
 ## Commands
 
@@ -529,22 +530,22 @@ Errors:
 ### Successful saga path
 
 1. Order service creates a pending order.
-2. Order service calls `POST /reservations`.
+2. The Order Saga worker calls `POST /reservations`.
 3. Inventory creates a `PENDING` reservation and moves quantity from available to reserved.
-4. Order service calls Payments.
-5. If payment succeeds, Order service calls `POST /reservations/:reservationId/confirm`.
+4. The Order Saga worker observes the reservation event and requests payment authorization.
+5. If payment succeeds, the Order Saga worker calls `POST /reservations/:reservationId/confirm`.
 6. Inventory marks the reservation `CONFIRMED` and consumes the reserved quantity.
-7. Order service confirms the order.
+7. The Order Saga worker confirms the order.
 
 ### Compensation path
 
 1. Order service creates a pending order.
-2. Order service calls `POST /reservations`.
+2. The Order Saga worker calls `POST /reservations`.
 3. Inventory creates a `PENDING` reservation and reserves stock.
-4. Payment fails, times out, or the order is cancelled.
-5. Order service calls `POST /reservations/:reservationId/release`.
+4. Payment fails, a later saga step fails, or the order is cancelled.
+5. The Order Saga worker calls `POST /reservations/:reservationId/release`.
 6. Inventory marks the reservation `RELEASED` and restores available stock.
-7. Order service cancels the order.
+7. The Order Saga worker cancels or compensates the order when needed.
 
 ## Idempotency Summary
 

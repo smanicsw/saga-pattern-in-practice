@@ -39,6 +39,7 @@ export function OrdersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [newCustomerId, setNewCustomerId] = useState("");
+  const [paymentMethodToken, setPaymentMethodToken] = useState("");
   const [items, setItems] = useState<OrderItemDraft[]>([
     { productId: "", quantity: "1" },
   ]);
@@ -94,6 +95,7 @@ export function OrdersPage() {
     onSuccess: () => {
       setCreateOpen(false);
       setNewCustomerId("");
+      setPaymentMethodToken("");
       setItems([{ productId: "", quantity: "1" }]);
       refreshOrders();
     },
@@ -116,6 +118,7 @@ export function OrdersPage() {
 
     createMutation.mutate({
       customerId: newCustomerId.trim(),
+      paymentMethodToken: paymentMethodToken.trim() || undefined,
       items: items
         .filter((item) => item.productId)
         .map((item) => ({
@@ -251,6 +254,15 @@ export function OrdersPage() {
                 onChange={(event) => setNewCustomerId(event.target.value)}
                 required
                 value={newCustomerId}
+              />
+            </label>
+            <label>
+              Payment token
+              <input
+                maxLength={255}
+                onChange={(event) => setPaymentMethodToken(event.target.value)}
+                placeholder="card_declined"
+                value={paymentMethodToken}
               />
             </label>
             <div className="item-stack">
