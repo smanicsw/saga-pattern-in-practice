@@ -41,8 +41,6 @@ export async function cleanTestDatabase() {
 
   await db.raw(`
     truncate table
-      inbox_events,
-      order_sagas,
       outbox_events,
       order_items,
       orders

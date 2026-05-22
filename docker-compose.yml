@@ -9,7 +9,6 @@ services:
       ORDER_SERVICE_PORT: ${ORDER_SERVICE_PORT}
       DATABASE_URL: ${ORDER_DATABASE_URL}
       INVENTORY_SERVICE_BASE_URL: ${INVENTORY_SERVICE_BASE_URL:-http://inventory:3003}
-      PAYMENTS_SERVICE_BASE_URL: ${PAYMENTS_SERVICE_BASE_URL:-http://payments:3002}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:29092}
     ports:
       - "${ORDER_SERVICE_PORT}:${ORDER_SERVICE_PORT}"
@@ -44,7 +43,6 @@ services:
       NODE_ENV: ${NODE_ENV}
       DATABASE_URL: ${ORDER_DATABASE_URL}
       INVENTORY_SERVICE_BASE_URL: ${INVENTORY_SERVICE_BASE_URL:-http://inventory:3003}
-      PAYMENTS_SERVICE_BASE_URL: ${PAYMENTS_SERVICE_BASE_URL:-http://payments:3002}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:29092}
     depends_on:
       order:
@@ -57,20 +55,27 @@ services:
       - |
         node dist/outbox/worker.js
 
-  order-orchestrator-worker:
+  order-saga-worker:
     build:
       context: .
       args:
-        SERVICE: order
+        SERVICE: order-saga
     environment:
       NODE_ENV: ${NODE_ENV}
-      DATABASE_URL: ${ORDER_DATABASE_URL}
+      DATABASE_URL: ${ORDER_SAGA_DATABASE_URL}
+      ORDER_SERVICE_BASE_URL: ${ORDER_SERVICE_BASE_URL:-http://order:3001}
       INVENTORY_SERVICE_BASE_URL: ${INVENTORY_SERVICE_BASE_URL:-http://inventory:3003}
       PAYMENTS_SERVICE_BASE_URL: ${PAYMENTS_SERVICE_BASE_URL:-http://payments:3002}
       KAFKA_BROKERS: ${KAFKA_BROKERS:-kafka:29092}
-      KAFKA_ORDER_ORCHESTRATOR_GROUP_ID: ${KAFKA_ORDER_ORCHESTRATOR_GROUP_ID:-order-saga-orchestrator}
+      KAFKA_ORDER_SAGA_GROUP_ID: ${KAFKA_ORDER_SAGA_GROUP_ID:-order-saga-orchestrator}
     depends_on:
+      order-saga-db:
+        condition: service_healthy
       order:
+        condition: service_healthy
+      inventory:
+        condition: service_healthy
+      payments:
         condition: service_healthy
       kafka:
         condition: service_healthy
@@ -78,6 +83,10 @@ services:
       - sh
       - -c
       - |
+        until node_modules/.bin/knex migrate:latest --knexfile knexfile.cjs; do
+          echo "Waiting for order-saga-db and retrying migrations..."
+          sleep 2
+        done
         node dist/orchestrator/worker.js
 
   payments:
@@ -204,6 +213,26 @@ services:
       timeout: 5s
       retries: 20
 
+  order-saga-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${ORDER_SAGA_DB_USER}
+      POSTGRES_PASSWORD: ${ORDER_SAGA_DB_PASSWORD}
+      POSTGRES_DB: ${ORDER_SAGA_DB_NAME}
+    ports:
+      - "${ORDER_SAGA_DB_HOST_PORT}:5432"
+    volumes:
+      - order-saga-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${ORDER_SAGA_DB_USER} -d ${ORDER_SAGA_DB_NAME}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   payments-db:
     image: postgres:16-alpine
     environment:
@@ -215,7 +244,11 @@ services:
     volumes:
       - payments-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PAYMENTS_DB_USER} -d ${PAYMENTS_DB_NAME}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${PAYMENTS_DB_USER} -d ${PAYMENTS_DB_NAME}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -231,7 +264,11 @@ services:
     volumes:
       - inventory-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${INVENTORY_DB_USER} -d ${INVENTORY_DB_NAME}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${INVENTORY_DB_USER} -d ${INVENTORY_DB_NAME}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -269,6 +306,7 @@ services:
 
 volumes:
   order-db-data:
+  order-saga-db-data:
   payments-db-data:
   inventory-db-data:
   kafka-data:

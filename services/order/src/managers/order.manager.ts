@@ -24,7 +24,6 @@ import * as inventoryManager from "./inventory.manager.js";
 import type { CreateOutboxEventInput } from "./outbox-event.manager.js";
 import * as outboxEventManager from "./outbox-event.manager.js";
 import * as orderRepository from "../repositories/order.repository.js";
-import * as orderSagaRepository from "../repositories/order-saga.repository.js";
 
 export async function findMany({
   query,
@@ -74,9 +73,7 @@ export async function createOne({
 
   const currency = products[0].product.currency;
 
-  if (
-    products.some(({ product }) => product.currency !== currency)
-  ) {
+  if (products.some(({ product }) => product.currency !== currency)) {
     throw new OrderCurrencyMismatchError();
   }
 
@@ -122,23 +119,10 @@ export async function createOne({
       const orderCreatedOutboxEvent = buildOrderCreatedOutboxEvent({
         order,
         outboxEventMetadata,
+        paymentMethodToken: createOrderInput.paymentMethodToken ?? null,
       });
 
       await outboxEventManager.createOne(orderCreatedOutboxEvent);
-
-      await orderSagaRepository.createOneOrFindExisting({
-        newOrderSaga: {
-          orderId: order.id,
-          status: "STARTED",
-          currentStep: "RESERVE_INVENTORY",
-          reservationId: null,
-          paymentId: null,
-          paymentMethodToken: createOrderInput.paymentMethodToken ?? null,
-          failureReason: null,
-          createdAt: date,
-          updatedAt: date,
-        },
-      });
 
       return order;
     },
@@ -223,9 +207,11 @@ async function updateOneStatus({
 function buildOrderCreatedOutboxEvent({
   order,
   outboxEventMetadata,
+  paymentMethodToken,
 }: {
   order: Order;
   outboxEventMetadata?: OutboxEventMetadata;
+  paymentMethodToken: string | null;
 }): CreateOutboxEventInput<OrderCreatedPayload> {
   return {
     type: OrderEventType.Created,
@@ -234,6 +220,7 @@ function buildOrderCreatedOutboxEvent({
     aggregate: buildOrderAggregate({ order }),
     payload: {
       current: order,
+      paymentMethodToken,
     },
     ...(outboxEventMetadata ?? {}),
   };

@@ -9,6 +9,10 @@ const services = {
     packageName: "@saga/order-service",
     dbService: "order-test-db",
   },
+  "order-saga": {
+    packageName: "@saga/order-saga-service",
+    dbService: "order-saga-test-db",
+  },
   payments: {
     packageName: "@saga/payments-service",
     dbService: "payments-test-db",
@@ -19,6 +23,8 @@ const aliases = {
   all: Object.keys(services),
   inventory: ["inventory"],
   order: ["order"],
+  "order-saga": ["order-saga"],
+  saga: ["order-saga"],
   payment: ["payments"],
   payments: ["payments"],
 };
@@ -43,7 +49,11 @@ const selectedServices = selectedServiceNames.map((name) => services[name]);
 
 switch (command) {
   case "up":
-    runDockerCompose(["up", "-d", ...selectedServices.map((service) => service.dbService)]);
+    runDockerCompose([
+      "up",
+      "-d",
+      ...selectedServices.map((service) => service.dbService),
+    ]);
     break;
   case "test":
     runPnpmForServices("test");
@@ -66,12 +76,7 @@ switch (command) {
 
 function runPnpmForServices(scriptName) {
   for (const service of selectedServices) {
-    run("corepack", [
-      "pnpm",
-      "--filter",
-      service.packageName,
-      scriptName,
-    ]);
+    run("corepack", ["pnpm", "--filter", service.packageName, scriptName]);
   }
 }
 

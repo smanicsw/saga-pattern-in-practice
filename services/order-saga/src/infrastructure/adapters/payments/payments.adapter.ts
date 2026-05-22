@@ -3,10 +3,7 @@ import {
   PAYMENTS_SERVICE_NAME,
 } from "../../../constants/index.js";
 import { PaymentsServiceUnavailableError } from "../../../errors/errors.js";
-import {
-  type PathParamValue,
-  makeApiClient,
-} from "../http/index.js";
+import { type PathParamValue, makeApiClient } from "../http/index.js";
 
 const client = makeApiClient({
   baseUrl: () => PAYMENTS_SERVICE_BASE_URL.value,

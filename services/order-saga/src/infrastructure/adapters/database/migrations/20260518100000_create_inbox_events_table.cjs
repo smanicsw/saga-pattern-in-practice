@@ -21,7 +21,13 @@ exports.up = async function (knex) {
       .string("status", 20)
       .notNullable()
       .defaultTo("PENDING")
-      .checkIn(["PENDING", "PROCESSING", "PROCESSED", "FAILED", "DEAD_LETTERED"]);
+      .checkIn([
+        "PENDING",
+        "PROCESSING",
+        "PROCESSED",
+        "FAILED",
+        "DEAD_LETTERED",
+      ]);
     table.integer("attempts").notNullable().defaultTo(0);
     table.timestamp("next_attempt_at").defaultTo(knex.fn.now());
     table.timestamp("received_at").notNullable().defaultTo(knex.fn.now());

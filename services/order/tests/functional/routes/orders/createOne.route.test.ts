@@ -19,9 +19,7 @@ type Product = {
   currency: string;
 };
 
-type InventoryFailureMode =
-  | "server_error"
-  | "invalid_json";
+type InventoryFailureMode = "server_error" | "invalid_json";
 
 type InventoryMockState = {
   failureMode?: InventoryFailureMode;
@@ -136,6 +134,7 @@ describe("POST /api/v1/order/orders", () => {
       });
       expect(outboxRows[0].payload).toEqual({
         current: createOneResponse.body.data,
+        paymentMethodToken: null,
       });
     });
 
@@ -264,7 +263,6 @@ describe("POST /api/v1/order/orders", () => {
         error: "inventory_service_unavailable",
       });
     });
-
   });
 });
 

@@ -52,16 +52,6 @@ export class InventoryRequestFailedError extends HttpError {
   readonly upstreamStatus: number;
 }
 
-export class PaymentsServiceUnavailableError extends HttpError {
-  constructor() {
-    super({
-      status: 502,
-      code: "payments_service_unavailable",
-      message: "Payments service is unavailable.",
-    });
-  }
-}
-
 export class OrderCurrencyMismatchError extends HttpError {
   constructor() {
     super({
